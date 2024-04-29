@@ -74,8 +74,7 @@ class Workspace:
                       specs.Array((1,), np.float32, 'reward'),
                       specs.Array((1,), np.float32, 'discount'))
 
-        self.replay_storage = ReplayBufferStorage(data_specs,
-                                                  self.work_dir / 'buffer')
+        self.replay_storage = ReplayBufferStorage(data_specs, self.work_dir / 'buffer')
 
         self.replay_loader = make_replay_loader(
             self.work_dir / 'buffer', self.cfg.replay_buffer_size,
@@ -247,3 +246,4 @@ def main(cfg):
 
 if __name__ == '__main__':
     main()
+    # ==> $ python train.py task=pendulum_swingup agent=drqv2_pad_2

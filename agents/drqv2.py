@@ -56,7 +56,7 @@ class RandomShiftsAug(nn.Module):
 class DrQV2Agent:
     def __init__(self, obs_shape, action_shape, device, lr, feature_dim, hidden_dim,
                  linear_approx, critic_target_tau, num_expl_steps, update_every_steps,
-                 stddev_schedule, stddev_clip):
+                 stddev_schedule, stddev_clip, pad):
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps
@@ -78,7 +78,7 @@ class DrQV2Agent:
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
 
         # data augmentation
-        self.aug = RandomShiftsAug(pad=4)
+        self.aug = RandomShiftsAug(pad=pad)
 
         self.train()
         self.critic_target.train()
