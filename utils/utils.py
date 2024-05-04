@@ -20,7 +20,7 @@ from torch.distributions.utils import _standard_normal
 
 
 _STATE_AGENTS = ['hpg', 'stochastichpg', 'ddpg', 'td3', 'sac']
-_PIXEL_AGENTS = ['hpg', 'stochastichpg', 'drqv2', 'sacae', 'dbc', 'deepmdp']
+_PIXEL_AGENTS = ['hpg', 'stochastichpg', 'drqv2', 'drqv2_pad_2', 'drqv2_pad_4', 'drqv2_pad_6', 'sacae', 'dbc', 'deepmdp']
 
 
 class eval_mode:
