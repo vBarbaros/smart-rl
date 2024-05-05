@@ -200,6 +200,8 @@ class Workspace:
             self.replay_storage.add(time_step)
             episode_step += 1
             self._global_step += 1
+            if self._global_step == 2000:
+                print('Episode reward', episode_reward)
 
     def save_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
