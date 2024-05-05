@@ -40,6 +40,7 @@ matching_dims: false
 linear_approx: false
 feature_dim: 50
 lifting_weight: 100
+pad: 0
 
 hydra:
   run:

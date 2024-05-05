@@ -1,4 +1,4 @@
-agent_name: drqv2
+agent_name: drqv2_pad_9
 discrete_actions: false
 
 agent:
@@ -15,4 +15,4 @@ agent:
   stddev_schedule: ${stddev_schedule}
   stddev_clip: 0.3
   linear_approx: ${linear_approx}
-  pad: ${pad}
+  pad: 9
