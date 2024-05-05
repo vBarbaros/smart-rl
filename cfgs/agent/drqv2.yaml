@@ -15,4 +15,4 @@ agent:
   stddev_schedule: ${stddev_schedule}
   stddev_clip: 0.3
   linear_approx: ${linear_approx}
-  pad: ${pad}
+  pad: 0
