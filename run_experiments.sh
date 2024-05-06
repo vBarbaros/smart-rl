@@ -10,7 +10,7 @@ python train.py task=pendulum_swingup agent=drqv2 &
 echo $! >> "$pid_file"
 
 #for i in $(seq 2 2 10); do
-for i in $(seq 2 2 4); do
+for i in $(seq 2 2 10); do
     # Run the Python script with the current agent value in the background
     python train.py task=pendulum_swingup agent=drqv2_pad_$i &
     # Capture the PID of the last background process and store it

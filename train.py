@@ -11,6 +11,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import os
 os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
 os.environ['MUJOCO_GL'] = 'glfw'
+os.environ['MUJOCO_GL'] = 'osmesa'
 
 from pathlib import Path
 
@@ -26,7 +27,9 @@ from utils.replay_buffer import ReplayBufferStorage, make_replay_loader
 from utils.video import TrainVideoRecorder, VideoRecorder
 
 
-torch.backends.cudnn.benchmark = True
+# torch.backends.cudnn.benchmark = True
+#torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.enabled = True
 
 
 def make_agent(obs_spec, action_spec, cfg):

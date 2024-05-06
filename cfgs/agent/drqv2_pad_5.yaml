@@ -5,7 +5,7 @@ agent:
   _target_: agents.drqv2.DrQV2Agent
   obs_shape: ??? # to be specified later
   action_shape: ??? # to be specified later
-  device: cpu
+  device: ${device}
   lr: ${lr}
   critic_target_tau: 0.01
   update_every_steps: 2
