@@ -102,6 +102,19 @@ class DrQV2Agent:
                 action.uniform_(-1.0, 1.0)
         return action.cpu().numpy()[0]
 
+    def act_with_metrics(self, obs, step, eval_mode):
+        obs = torch.as_tensor(obs, device=self.device)
+        obs = self.pixel_encoder(obs.unsqueeze(0))
+        stddev = utils.schedule(self.stddev_schedule, step)
+        dist = self.actor(obs, stddev)
+        if eval_mode:
+            action = dist.mean
+        else:
+            action = dist.sample(clip=None)
+            if step < self.num_expl_steps:
+                action.uniform_(-1.0, 1.0)
+        return action.cpu().numpy()[0], {}
+
     def observe(self, obs, action):
         obs = torch.as_tensor(obs, device=self.device).float().unsqueeze(0)
         action = torch.as_tensor(action, device=self.device).float().unsqueeze(0)
