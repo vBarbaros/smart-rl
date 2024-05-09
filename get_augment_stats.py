@@ -96,9 +96,7 @@ class Workspace:
             time_step = self.train_env.reset()
             while not time_step.last():
                 with torch.no_grad(), utils.eval_mode(self.agent):
-                    action, variable = self.agent.act_with_metrics(time_step.observation,
-                                            self.global_step,
-                                            eval_mode=True)
+                    action, variable = self.agent.act_with_metrics(time_step.observation, self.global_step, eval_mode=True)
                 time_step = self.train_env.step(action)
                 total_reward += time_step.reward
                 step += 1
