@@ -13,6 +13,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.transforms.functional import to_pil_image
 
 from models.cnn import PixelEncoder
 from models.core import DrQActor, Critic
@@ -103,7 +104,25 @@ class DrQV2Agent:
         return action.cpu().numpy()[0]
 
     def act_with_metrics(self, obs, step, eval_mode):
+        # augment
+        original_images = [to_pil_image(obs[i]) for i in range(obs.shape[0])]
+        # for idx, img in enumerate(original_images):
+        #     img.save(f'image_{idx}.png')
+
+
+        # encode
         obs = torch.as_tensor(obs, device=self.device)
+
+        obs_pre_aug = obs.clone().unsqueeze(1)
+        obs_orig_aug = obs.clone()
+        obs_aug = self.aug(obs_pre_aug.float())
+
+        obs_augment_tensor = obs_aug.clone().squeeze(0)
+        augmented_images = [to_pil_image(obs_augment_tensor[i]) for i in range(obs_augment_tensor.shape[0])]
+        # for idx, img in enumerate(augmented_images):
+        #     img.save(f'aug_image_{idx}.png')
+
+
         obs = self.pixel_encoder(obs.unsqueeze(0))
         stddev = utils.schedule(self.stddev_schedule, step)
         dist = self.actor(obs, stddev)
@@ -113,7 +132,7 @@ class DrQV2Agent:
             action = dist.sample(clip=None)
             if step < self.num_expl_steps:
                 action.uniform_(-1.0, 1.0)
-        return action.cpu().numpy()[0], {}
+        return action.cpu().numpy()[0], obs_orig_aug, original_images, obs_augment_tensor, augmented_images
 
     def observe(self, obs, action):
         obs = torch.as_tensor(obs, device=self.device).float().unsqueeze(0)

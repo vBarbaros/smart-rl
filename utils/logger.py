@@ -28,10 +28,19 @@ COMMON_EVAL_FORMAT = [('frame', 'F', 'int'), ('step', 'S', 'int'),
                       ('total_time', 'T', 'time')]
 
 
-COMMON_AUGMENT_FORMAT = [('frame_aug', 'F', 'int'), ('step', 'S', 'int'),
-                      ('episode_aug', 'E', 'int'), ('episode_length', 'L', 'int'),
-                      ('episode_reward_aug', 'R', 'float'),
-                      ('total_time_aug', 'T', 'time')]
+COMMON_AUGMENT_FORMAT = [('step', 'S', 'int'),
+                         ('bhattacharyya', 'BHT', 'float'),
+                         ('ssim_dist', 'SSIM', 'float'),
+                         ('hamming', 'HUM', 'float'),
+                         ('chebyshev', 'CHB', 'float'),
+                         ('manhattan', 'MNH', 'float'),
+                         ('euclidian', 'EUC', 'float'),
+                         ('cosine_dist', 'COS', 'float'),
+                         ('mu_original', 'mu1', 'float'),
+                         ('mu_augment', 'mu2', 'float'),
+                         ('sigma_original', 'sgm1', 'float'),
+                         ('sigma_augment', 'sgm2', 'float'),
+                         ('kl_div', 'KL', 'float')]
 
 
 class AverageMeter(object):

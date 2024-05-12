@@ -20,10 +20,14 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
+import torch.nn.functional as F
 from dm_env import specs
+import ot
+from piq import ssim
 
 import utils.dmc as dmc
 import utils.utils as utils
+from utils.metrics import StatsMetrics
 from utils.logger import Logger
 from utils.replay_buffer import ReplayBufferStorage, make_replay_loader
 from utils.video import TrainVideoRecorder, VideoRecorder
@@ -51,6 +55,7 @@ class Workspace:
         utils.set_seed_everywhere(cfg.seed)
         self.device = torch.device(cfg.device)
         self.setup()
+        self.stats = StatsMetrics()
 
         self.agent = make_agent(self.train_env.observation_spec(),
                                 self.train_env.action_spec(),
@@ -90,24 +95,38 @@ class Workspace:
 
     def eval(self):
         step, episode, total_reward = 0, 0, 0
-        eval_until_episode = utils.Until(self.cfg.num_eval_episodes)
+        eval_until_episode = utils.Until(self.cfg.num_augment_episodes)
 
         while eval_until_episode(episode):
             time_step = self.train_env.reset()
             while not time_step.last():
                 with torch.no_grad(), utils.eval_mode(self.agent):
-                    action, variable = self.agent.act_with_metrics(time_step.observation, self.global_step, eval_mode=True)
+                    action, obs_tensor, obs_images, obs_aug_tensor, obs_aug_images = self.agent.act_with_metrics(
+                        time_step.observation, self.global_step, eval_mode=True)
+
+                sm = self.stats.get_metrics(obs_tensor, obs_aug_tensor)
                 time_step = self.train_env.step(action)
-                total_reward += time_step.reward
                 step += 1
+                self._global_step += 1
+
+                with self.logger.log_and_dump_ctx(self.global_frame, ty='augment') as log:
+                    log('ssim_dist', sm['ssim_dist'])
+                    log('hamming', sm['hamming'])
+                    log('bhattacharyya', sm['bhattacharyya'])
+                    log('kl_div', sm['kl_div'])
+                    log('chebyshev', sm['chebyshev'])
+                    log('manhattan', sm['manhattan'])
+                    log('euclidian', sm['euclidian'])
+                    log('cosine_dist', sm['cosine_dist'])
+                    log('mu_original', sm['mu_original'])
+                    log('mu_augment', sm['mu_augment'])
+                    log('sigma_original', sm['sigma_original'])
+                    log('sigma_augment', sm['sigma_augment'])
+                    log('step', self.global_step)
 
             episode += 1
 
-        with self.logger.log_and_dump_ctx(self.global_frame, ty='augment') as log:
-            log('episode_reward_aug', total_reward / episode)
-            log('episode_length_aug', step * self.cfg.action_repeat / episode)
-            log('episode_aug', self.global_episode)
-            log('step_aug', self.global_step)
+
 
     def log_augment_obs_stats(self, task_id=1):
         eval_every_step = utils.Every(self.cfg.eval_every_frames,
