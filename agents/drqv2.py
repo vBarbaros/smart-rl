@@ -54,6 +54,36 @@ class RandomShiftsAug(nn.Module):
                              align_corners=False)
 
 
+class Rotate5Degrees(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.angle = 5  # Rotation angle in degrees
+
+    def forward(self, x):
+        n, c, h, w = x.size()
+        angle_rad = self.angle * torch.pi / 180  # Convert angle to radians
+        angle_rad = torch.as_tensor(angle_rad).float()
+        # Calculate rotation matrix
+        cos_a = torch.cos(angle_rad)
+        sin_a = torch.sin(angle_rad)
+        rotation_matrix = torch.tensor([[cos_a, -sin_a, 0],
+                                        [sin_a, cos_a, 0]],
+                                       device=x.device,
+                                       dtype=x.dtype)
+
+        # Expand rotation matrix to match batch size
+        rotation_matrix = rotation_matrix.repeat(n, 1, 1)
+
+        # Create affine grid
+        grid = F.affine_grid(rotation_matrix, x.size(), align_corners=False)
+
+        # Rotate image
+        # return F.grid_sample(x, grid, mode='bilinear', padding_mode='zeros', align_corners=False)
+        return F.grid_sample(x, grid, mode='nearest', padding_mode='reflection', align_corners=False)
+
+
+
+
 class DrQV2Agent:
     def __init__(self, obs_shape, action_shape, device, lr, feature_dim, hidden_dim,
                  linear_approx, critic_target_tau, num_expl_steps, update_every_steps,
@@ -79,7 +109,8 @@ class DrQV2Agent:
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
 
         # data augmentation
-        self.aug = RandomShiftsAug(pad=pad)
+        # self.aug = RandomShiftsAug(pad=pad)
+        self.aug = Rotate5Degrees()
 
         self.train()
         self.critic_target.train()
@@ -103,11 +134,13 @@ class DrQV2Agent:
                 action.uniform_(-1.0, 1.0)
         return action.cpu().numpy()[0]
 
-    def act_with_metrics(self, obs, step, eval_mode):
+    def act_with_metrics(self, obs, step, eval_mode, save_image=False):
         # augment
         original_images = [to_pil_image(obs[i]) for i in range(obs.shape[0])]
-        # for idx, img in enumerate(original_images):
-        #     img.save(f'image_{idx}.png')
+
+        if save_image:
+            for idx, img in enumerate(original_images):
+                img.save(f'image_{idx}.png')
 
 
         # encode
@@ -119,8 +152,9 @@ class DrQV2Agent:
 
         obs_augment_tensor = obs_aug.clone().squeeze(0)
         augmented_images = [to_pil_image(obs_augment_tensor[i]) for i in range(obs_augment_tensor.shape[0])]
-        # for idx, img in enumerate(augmented_images):
-        #     img.save(f'aug_image_{idx}.png')
+        if save_image:
+            for idx, img in enumerate(augmented_images):
+                img.save(f'aug_image_{idx}.png')
 
 
         obs = self.pixel_encoder(obs.unsqueeze(0))

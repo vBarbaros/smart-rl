@@ -102,7 +102,7 @@ class Workspace:
             while not time_step.last():
                 with torch.no_grad(), utils.eval_mode(self.agent):
                     action, obs_tensor, obs_images, obs_aug_tensor, obs_aug_images = self.agent.act_with_metrics(
-                        time_step.observation, self.global_step, eval_mode=True)
+                        time_step.observation, self.global_step, eval_mode=True, save_image=True)
 
                 sm = self.stats.get_metrics(obs_tensor, obs_aug_tensor)
                 time_step = self.train_env.step(action)
