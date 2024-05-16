@@ -24,6 +24,7 @@ import torch.nn.functional as F
 from dm_env import specs
 import ot
 from piq import ssim
+from utils.augmenter import *
 
 import utils.dmc as dmc
 import utils.utils as utils

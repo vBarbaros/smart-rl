@@ -1,4 +1,4 @@
-agent_name: ${agent_name}
+agent_name: drqv2_aug
 discrete_actions: false
 
 agent:
@@ -16,5 +16,4 @@ agent:
   stddev_clip: 0.3
   linear_approx: ${linear_approx}
   augment_type: ${augment_type}
-  pad: ${pad}
-  rotate_angle: ${rotate_angle}
+  augment_param: ${augment_param}

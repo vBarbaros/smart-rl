@@ -19,67 +19,68 @@ from models.cnn import PixelEncoder
 from models.core import DrQActor, Critic
 import utils.utils as utils
 
+from utils.augmenter import AugmentationFactory
 
-class RandomShiftsAug(nn.Module):
-    def __init__(self, pad):
-        super().__init__()
-        self.pad = pad
-
-    def forward(self, x):
-        n, c, h, w = x.size()
-        assert h == w
-        padding = tuple([self.pad] * 4)
-        x = F.pad(x, padding, 'replicate')
-        eps = 1.0 / (h + 2 * self.pad)
-        arange = torch.linspace(-1.0 + eps,
-                                1.0 - eps,
-                                h + 2 * self.pad,
-                                device=x.device,
-                                dtype=x.dtype)[:h]
-        arange = arange.unsqueeze(0).repeat(h, 1).unsqueeze(2)
-        base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
-        base_grid = base_grid.unsqueeze(0).repeat(n, 1, 1, 1)
-
-        shift = torch.randint(0,
-                              2 * self.pad + 1,
-                              size=(n, 1, 1, 2),
-                              device=x.device,
-                              dtype=x.dtype)
-        shift *= 2.0 / (h + 2 * self.pad)
-
-        grid = base_grid + shift
-        return F.grid_sample(x,
-                             grid,
-                             padding_mode='zeros',
-                             align_corners=False)
-
-
-class Rotate5Degrees(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.angle = 5  # Rotation angle in degrees
-
-    def forward(self, x):
-        n, c, h, w = x.size()
-        angle_rad = self.angle * torch.pi / 180  # Convert angle to radians
-        angle_rad = torch.as_tensor(angle_rad).float()
-        # Calculate rotation matrix
-        cos_a = torch.cos(angle_rad)
-        sin_a = torch.sin(angle_rad)
-        rotation_matrix = torch.tensor([[cos_a, -sin_a, 0],
-                                        [sin_a, cos_a, 0]],
-                                       device=x.device,
-                                       dtype=x.dtype)
-
-        # Expand rotation matrix to match batch size
-        rotation_matrix = rotation_matrix.repeat(n, 1, 1)
-
-        # Create affine grid
-        grid = F.affine_grid(rotation_matrix, x.size(), align_corners=False)
-
-        # Rotate image
-        # return F.grid_sample(x, grid, mode='bilinear', padding_mode='zeros', align_corners=False)
-        return F.grid_sample(x, grid, mode='nearest', padding_mode='reflection', align_corners=False)
+# class RandomShiftsAug(nn.Module):
+#     def __init__(self, pad):
+#         super().__init__()
+#         self.pad = pad
+#
+#     def forward(self, x):
+#         n, c, h, w = x.size()
+#         assert h == w
+#         padding = tuple([self.pad] * 4)
+#         x = F.pad(x, padding, 'replicate')
+#         eps = 1.0 / (h + 2 * self.pad)
+#         arange = torch.linspace(-1.0 + eps,
+#                                 1.0 - eps,
+#                                 h + 2 * self.pad,
+#                                 device=x.device,
+#                                 dtype=x.dtype)[:h]
+#         arange = arange.unsqueeze(0).repeat(h, 1).unsqueeze(2)
+#         base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
+#         base_grid = base_grid.unsqueeze(0).repeat(n, 1, 1, 1)
+#
+#         shift = torch.randint(0,
+#                               2 * self.pad + 1,
+#                               size=(n, 1, 1, 2),
+#                               device=x.device,
+#                               dtype=x.dtype)
+#         shift *= 2.0 / (h + 2 * self.pad)
+#
+#         grid = base_grid + shift
+#         return F.grid_sample(x,
+#                              grid,
+#                              padding_mode='zeros',
+#                              align_corners=False)
+#
+#
+# class Rotate5Degrees(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.angle = 5  # Rotation angle in degrees
+#
+#     def forward(self, x):
+#         n, c, h, w = x.size()
+#         angle_rad = self.angle * torch.pi / 180  # Convert angle to radians
+#         angle_rad = torch.as_tensor(angle_rad).float()
+#         # Calculate rotation matrix
+#         cos_a = torch.cos(angle_rad)
+#         sin_a = torch.sin(angle_rad)
+#         rotation_matrix = torch.tensor([[cos_a, -sin_a, 0],
+#                                         [sin_a, cos_a, 0]],
+#                                        device=x.device,
+#                                        dtype=x.dtype)
+#
+#         # Expand rotation matrix to match batch size
+#         rotation_matrix = rotation_matrix.repeat(n, 1, 1)
+#
+#         # Create affine grid
+#         grid = F.affine_grid(rotation_matrix, x.size(), align_corners=False)
+#
+#         # Rotate image
+#         # return F.grid_sample(x, grid, mode='bilinear', padding_mode='zeros', align_corners=False)
+#         return F.grid_sample(x, grid, mode='nearest', padding_mode='reflection', align_corners=False)
 
 
 
@@ -87,7 +88,7 @@ class Rotate5Degrees(nn.Module):
 class DrQV2Agent:
     def __init__(self, obs_shape, action_shape, device, lr, feature_dim, hidden_dim,
                  linear_approx, critic_target_tau, num_expl_steps, update_every_steps,
-                 stddev_schedule, stddev_clip, pad):
+                 stddev_schedule, stddev_clip, augment_type, augment_param):
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps
@@ -109,8 +110,10 @@ class DrQV2Agent:
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
 
         # data augmentation
-        # self.aug = RandomShiftsAug(pad=pad)
-        self.aug = Rotate5Degrees()
+        if augment_type == 'rotate' and augment_param is not None:
+            self.aug = AugmentationFactory(augmentation_type='rotate', rotate_angle=augment_param)
+        elif augment_type == 'shift' and augment_param is not None:
+            self.aug = AugmentationFactory(augmentation_type='shift', pad=augment_param)
 
         self.train()
         self.critic_target.train()

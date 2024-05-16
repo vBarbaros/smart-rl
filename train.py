@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import os
 os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
 os.environ['MUJOCO_GL'] = 'glfw'
-os.environ['MUJOCO_GL'] = 'osmesa'
+# os.environ['MUJOCO_GL'] = 'osmesa'
 
 from pathlib import Path
 

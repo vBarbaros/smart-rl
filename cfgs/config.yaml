@@ -41,13 +41,14 @@ matching_dims: false
 linear_approx: false
 feature_dim: 50
 lifting_weight: 100
-pad: 0
+augment_type: ${agent.augment_type}
+augment_param: ${agent.augment_param}
 
 hydra:
   run:
-    dir: ./${experiment}/${task_name}/${agent.agent_name}_pixels-${pixel_obs}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/
+    dir: ./${experiment}/${task_name}/${agent.agent_name}_pixels-${pixel_obs}-${augment_type}-${augment_param}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/
   sweep:
-    dir: ./${experiment}/${task_name}/${agent.agent_name}_pixels-${pixel_obs}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/
+    dir: ./${experiment}/${task_name}/${agent.agent_name}_pixels-${pixel_obs}-${augment_type}-${augment_param}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/
     subdir: ${hydra.job.num}
   launcher:
     timeout_min: 4300
@@ -56,4 +57,4 @@ hydra:
     tasks_per_node: 1
     mem_gb: 160
     nodes: 1
-    submitit_folder: ./${experiment}_multirun/${task_name}${agent.agent_name}_pixels-${pixel_obs}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/.slurm
+    submitit_folder: ./${experiment}_multirun/${task_name}${agent.agent_name}_pixels-${pixel_obs}-${augment_type}-${augment_param}/seed_${seed}/${now:%Y-%m-%d_%H-%M-%S}/.slurm
