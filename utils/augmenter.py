@@ -62,7 +62,9 @@ class RotateDegrees(AugmentationStrategy):
 
     def forward(self, x):
         n, c, h, w = x.size()
-        angle_rad = self.angle * torch.pi / 180
+        # Randomly decide to rotate clockwise or counterclockwise
+        direction = torch.randint(0, 2, (1,)) * 2 - 1  # Generates 0 or 1, then maps to -1 or 1
+        angle_rad = self.angle * direction * torch.pi / 180  # Converts angle to radians and applies direction
         angle_rad = torch.as_tensor(angle_rad).float()
         cos_a = torch.cos(angle_rad)
         sin_a = torch.sin(angle_rad)
