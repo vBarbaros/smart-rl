@@ -10,9 +10,9 @@ pid_file="training_pids.txt"
 #echo $! >> "$pid_file"
 
 #for i in $(seq 2 2 10); do
-for i in $(seq 2 1 15); do
+for i in $(seq 1.1 0.1 2.5); do
     # Run the Python script with the current agent value in the background
-    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=shift augment_param=$i
+    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=rotate augment_param=$i
     # Capture the PID of the last background process and store it
     echo $! >> "$pid_file"
 done

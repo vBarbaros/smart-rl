@@ -112,12 +112,26 @@ if __name__ == "__main__":
 
 # ex. 2 - find all eval.csv files under all experiments, for all seeds of that experiment
 # python process.py --root_directory 'exp-rot/exp/pendulum_swingup' --subdir_pattern '*/*/*/eval.csv'
-
-
 # python process.py --root_directory 'exp-rot/exp/pendulum_swingup' --subdir_pattern '*/*/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/rotate/ --output_filename episode-rewards-rotate-all.csv
 
 
 
 # python process.py --root_directory 'exp-rot/pendulum_swingup_augment_stats' --subdir_pattern '*/*/*/augment.csv'
-
 # python process.py --root_directory 'exp-rot/pendulum_swingup_augment_stats' --subdir_pattern '*/*/*/augment.csv' --compute_averages Y --output_path aggregate/rotate/ --output_filename all-stats-average-rotate-all.csv
+
+
+# python process.py --root_directory 'exp-pad/exp/pendulum_swingup' --subdir_pattern '*/*/*/eval.csv'
+# python process.py --root_directory 'exp-pad/exp/pendulum_swingup' --subdir_pattern '*/*/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/shift/ --output_filename episode-rewards-shift-all.csv
+
+
+# python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/*/*/augment.csv'
+# python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/*/*/augment.csv' --compute_averages Y --output_path aggregate/shift/ --output_filename all-stats-average-shift-all.csv
+
+
+
+
+# python process.py --root_directory 'exp-pad/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv'
+# python process.py --root_directory 'exp-pad/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/shift/ --output_filename episode-rewards-shift-seed-2-all.csv
+
+# python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv'
+# python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv' --compute_averages Y --output_path aggregate/shift/ --output_filename all-stats-average-shift-all.csv
