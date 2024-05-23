@@ -7,12 +7,13 @@ import torch.nn as nn
 
 
 class AugmentationFactory(nn.Module):
-    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4):
+    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4, contrast_factor=2):
         super().__init__()
         # Dictionary to hold augmentation strategies
         self.augmentations = {
             "shift": RandomShiftsAug(pad=pad),
-            "rotate": RotateDegrees(angle=rotate_angle)
+            "rotate": RotateDegrees(angle=rotate_angle),
+            "contrast": IncreaseContrast(factor=contrast_factor)
         }
         # Set the current augmentation based on the type provided
         self.set_augmentation(augmentation_type)
@@ -75,6 +76,21 @@ class RotateDegrees(AugmentationStrategy):
         rotation_matrix = rotation_matrix.repeat(n, 1, 1)
         grid = F.affine_grid(rotation_matrix, x.size(), align_corners=False)
         return F.grid_sample(x, grid, mode='nearest', padding_mode='reflection', align_corners=False)
+
+
+class IncreaseContrast(AugmentationStrategy):
+    def __init__(self, factor):
+        super().__init__()
+        self.factor = factor  # Factor by which to increase the contrast
+
+    def forward(self, x):
+        # Assuming x is a tensor of shape (N, C, H, W) with values in [0, 1]
+        mean = x.mean(dim=(2, 3), keepdim=True)  # Calculate mean per channel
+
+        # Apply contrast formula
+        x = (x - mean) * self.factor + mean
+        # x = torch.clamp(x, 0, 1)  # Clamp values to maintain valid image range [0, 1]
+        return x
 
 
 class Augmenter(nn.Module):
