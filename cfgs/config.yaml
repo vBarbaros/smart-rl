@@ -30,7 +30,7 @@ nstep: 3
 batch_size: 256
 # misc
 seed: 2
-device: cpu
+device: cuda
 save_video: true
 save_train_video: false
 # experiment
