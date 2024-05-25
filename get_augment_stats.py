@@ -170,3 +170,5 @@ def main(cfg):
 if __name__ == '__main__':
     main()
     # ==> $ python train.py task=pendulum_swingup agent=drqv2_pad_2
+    # ==> $ python train.py task=pendulum_swingup agent=drqv2_pad_2
+

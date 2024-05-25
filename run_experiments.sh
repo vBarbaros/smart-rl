@@ -10,16 +10,17 @@
 #echo $! >> "$pid_file"
 
 #for i in $(seq 2 2 10); do
-for i in $(seq 0.5 0.5 15); do
+for i in $(seq 1.0 0.5 2.0); do
     # Run the Python script with the current agent value in the background
-    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=contrast augment_param=$i
+    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=zoom augment_param=$i
     # Capture the PID of the last background process and store it
 #    echo $! >> "$pid_file"
 done
 
 # Display the PIDs stored
-echo "Running processes' PIDs:"
-cat "$pid_file"
+echo "...DONE"
+#echo "Running processes' PIDs:"
+#cat "$pid_file"
 
 ## Wait for all background processes to finish (optional)
 #wait

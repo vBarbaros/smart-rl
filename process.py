@@ -135,3 +135,12 @@ if __name__ == "__main__":
 
 # python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv'
 # python process.py --root_directory 'exp-pad/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv' --compute_averages Y --output_path aggregate/shift/ --output_filename all-stats-average-shift-all.csv
+
+
+
+
+# python process.py --root_directory 'exp-contrast/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv'
+# python process.py --root_directory 'exp-contrast/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/contrast/ --output_filename episode-rewards-contrast-seed-2-all.csv
+
+# python process.py --root_directory 'exp-contrast/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv'
+# python process.py --root_directory 'exp-contrast/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv' --compute_averages Y --output_path aggregate/contrast/ --output_filename all-stats-average-contrast-all.csv

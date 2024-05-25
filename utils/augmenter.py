@@ -7,13 +7,14 @@ import torch.nn as nn
 
 
 class AugmentationFactory(nn.Module):
-    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4, contrast_factor=2):
+    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4, contrast_factor=2, scale_factor=1.2):
         super().__init__()
         # Dictionary to hold augmentation strategies
         self.augmentations = {
             "shift": RandomShiftsAug(pad=pad),
             "rotate": RotateDegrees(angle=rotate_angle),
-            "contrast": IncreaseContrast(factor=contrast_factor)
+            "contrast": IncreaseContrast(factor=contrast_factor),
+            "zoom": Zoom(scale_factor=scale_factor)
         }
         # Set the current augmentation based on the type provided
         self.set_augmentation(augmentation_type)
@@ -91,6 +92,33 @@ class IncreaseContrast(AugmentationStrategy):
         x = (x - mean) * self.factor + mean
         # x = torch.clamp(x, 0, 1)  # Clamp values to maintain valid image range [0, 1]
         return x
+
+
+class Zoom(AugmentationStrategy):
+    def __init__(self, scale_factor):
+        super().__init__()
+        self.scale_factor = scale_factor  # Zoom-in scale factor
+
+    def forward(self, x):
+        n, c, h, w = x.size()
+        assert c == 1, "Input must be a grayscale image with a single channel."
+
+        # Inverse the scale factor for zooming in
+        scale_factor = 1 / self.scale_factor
+
+        # Create a scaling transformation matrix
+        zoom_matrix = torch.tensor([[scale_factor, 0, 0],
+                                    [0, scale_factor, 0]],
+                                   device=x.device,
+                                   dtype=x.dtype)
+        zoom_matrix = zoom_matrix.repeat(n, 1, 1)
+
+        # Create the grid for affine transformation
+        grid = F.affine_grid(zoom_matrix, x.size(), align_corners=False)
+
+        # Apply the grid transformation to the input image
+        zoomed_in_image = F.grid_sample(x, grid, mode='nearest', padding_mode='border', align_corners=True)
+        return zoomed_in_image
 
 
 class Augmenter(nn.Module):
