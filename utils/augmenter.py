@@ -101,8 +101,6 @@ class Zoom(AugmentationStrategy):
 
     def forward(self, x):
         n, c, h, w = x.size()
-        assert c == 1, "Input must be a grayscale image with a single channel."
-
         # Inverse the scale factor for zooming in
         scale_factor = 1 / self.scale_factor
 
