@@ -7,14 +7,15 @@ import torch.nn as nn
 
 
 class AugmentationFactory(nn.Module):
-    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4, contrast_factor=2, scale_factor=1.2):
+    def __init__(self, augmentation_type="shift", rotate_angle=4, pad=4, contrast_factor=2, scale_factor=1.2, sharp_factor=1.2):
         super().__init__()
         # Dictionary to hold augmentation strategies
         self.augmentations = {
             "shift": RandomShiftsAug(pad=pad),
             "rotate": RotateDegrees(angle=rotate_angle),
             "contrast": IncreaseContrast(factor=contrast_factor),
-            "zoom": Zoom(scale_factor=scale_factor)
+            "zoom": Zoom(scale_factor=scale_factor),
+            "sharp": Sharpness(sharp_factor=sharp_factor)
         }
         # Set the current augmentation based on the type provided
         self.set_augmentation(augmentation_type)
@@ -117,6 +118,39 @@ class Zoom(AugmentationStrategy):
         # Apply the grid transformation to the input image
         zoomed_in_image = F.grid_sample(x, grid, mode='nearest', padding_mode='border', align_corners=True)
         return zoomed_in_image
+
+
+class Sharpness(AugmentationStrategy):
+    def __init__(self, sharp_factor):
+        super().__init__()
+        self.factor = sharp_factor  # Sharpness adjustment factor
+
+    def forward(self, x):
+        assert len(x.size()) == 4, "Input must be a 4D tensor"
+
+        n, c, h, w = x.size()
+
+        # Define the sharpening kernel
+        kernel = torch.tensor([[0, -1, 0],
+                               [-1, 5, -1],
+                               [0, -1, 0]], dtype=torch.float32, device=x.device)
+        kernel = kernel.unsqueeze(0).unsqueeze(0)  # Shape (1, 1, 3, 3)
+
+        # Apply the kernel to each channel separately
+        sharp_images = []
+        for i in range(c):
+            x_channel = x[:, i:i+1, :, :]  # Extract single channel
+            x_channel_padded = F.pad(x_channel, (1, 1, 1, 1), mode='reflect')  # Padding to maintain the original size
+            sharp_image = F.conv2d(x_channel_padded, kernel)
+            sharp_images.append(sharp_image)
+
+        # Combine the sharp images for all channels
+        sharp_image_combined = torch.cat(sharp_images, dim=1)
+
+        # Combine the original and the sharp image
+        adjusted_image = torch.clamp((1 - self.factor) * x + self.factor * sharp_image_combined, 0, 1)
+
+        return adjusted_image
 
 
 class Augmenter(nn.Module):
