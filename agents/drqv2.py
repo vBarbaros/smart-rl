@@ -57,6 +57,8 @@ class DrQV2Agent:
             self.aug = AugmentationFactory(augmentation_type='zoom', scale_factor=augment_param)
         elif augment_type == 'sharp' and augment_param is not None:
             self.aug = AugmentationFactory(augmentation_type='sharp', sharp_factor=augment_param)
+        elif augment_type == 'sharpmin' and augment_param is not None:
+            self.aug = AugmentationFactory(augmentation_type='sharpmin', sharp_factor=augment_param)
 
         self.train()
         self.critic_target.train()

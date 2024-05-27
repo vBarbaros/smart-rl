@@ -15,7 +15,8 @@ class AugmentationFactory(nn.Module):
             "rotate": RotateDegrees(angle=rotate_angle),
             "contrast": IncreaseContrast(factor=contrast_factor),
             "zoom": Zoom(scale_factor=scale_factor),
-            "sharp": Sharpness(sharp_factor=sharp_factor)
+            "sharp": Sharpness(sharp_factor=sharp_factor),
+            "sharpmin": SharpnessMinimal(sharp_factor=sharp_factor)
         }
         # Set the current augmentation based on the type provided
         self.set_augmentation(augmentation_type)
@@ -139,7 +140,7 @@ class Sharpness(AugmentationStrategy):
         # Apply the kernel to each channel separately
         sharp_images = []
         for i in range(c):
-            x_channel = x[:, i:i+1, :, :]  # Extract single channel
+            x_channel = x[:, i:i + 1, :, :]  # Extract single channel
             x_channel_padded = F.pad(x_channel, (1, 1, 1, 1), mode='reflect')  # Padding to maintain the original size
             sharp_image = F.conv2d(x_channel_padded, kernel)
             sharp_images.append(sharp_image)
@@ -148,7 +149,41 @@ class Sharpness(AugmentationStrategy):
         sharp_image_combined = torch.cat(sharp_images, dim=1)
 
         # Combine the original and the sharp image
-        adjusted_image = torch.clamp((1 - self.factor) * x + self.factor * sharp_image_combined, 0, 1)
+        adjusted_image = torch.clamp((1 - self.factor) * x + self.factor * sharp_image_combined, 0, 255)
+
+        return adjusted_image
+
+
+class SharpnessMinimal(AugmentationStrategy):
+    def __init__(self, sharp_factor):
+        super().__init__()
+        self.factor = sharp_factor  # Sharpness adjustment factor
+
+    def forward(self, x):
+        assert len(x.size()) == 4, "Input must be a 4D tensor"
+
+        n, c, h, w = x.size()
+
+        # Define a more moderate sharpening kernel and normalize it
+        kernel = torch.tensor([[0, -0.1, 0],
+                               [-0.1, 0.4, -0.1],
+                               [0, -0.1, 0]], dtype=torch.float32, device=x.device)
+        kernel /= kernel.sum()  # Normalize the kernel
+        kernel = kernel.unsqueeze(0).unsqueeze(0)  # Shape (1, 1, 3, 3)
+
+        # Apply the kernel to each channel separately
+        sharp_images = []
+        for i in range(c):
+            x_channel = x[:, i:i + 1, :, :]  # Extract single channel
+            x_channel_padded = F.pad(x_channel, (1, 1, 1, 1), mode='reflect')  # Padding to maintain the original size
+            sharp_image = F.conv2d(x_channel_padded, kernel)
+            sharp_images.append(sharp_image)
+
+        # Combine the sharp images for all channels
+        sharp_image_combined = torch.cat(sharp_images, dim=1)
+
+        # Combine the original and the sharp image
+        adjusted_image = torch.clamp((1 - self.factor) * x + self.factor * sharp_image_combined, 0, 255)
 
         return adjusted_image
 
