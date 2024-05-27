@@ -147,6 +147,19 @@ if __name__ == "__main__":
 
 
 
+# python process.py --root_directory 'exp-zoom/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv'
+# python process.py --root_directory 'exp-zoom/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/zoom/ --output_filename episode-rewards-zoom-all.csv
+
+
+# python process.py --root_directory 'exp-sharp/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv'
+# python process.py --root_directory 'exp-sharp/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/sharp/ --output_filename episode-rewards-sharp-all.csv
+
+# python process.py --root_directory 'exp-sharpmin/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv'
+# python process.py --root_directory 'exp-sharpmin/exp/pendulum_swingup' --subdir_pattern '*/seed_2/*/eval.csv' --column_to_extract episode_reward --output_path aggregate/sharpmin/ --output_filename episode-rewards-sharpmin-all.csv
+
+
+
+
 # python process.py --root_directory 'exp-zoom/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv'
 # python process.py --root_directory 'exp-zoom/pendulum_swingup_augment_stats' --subdir_pattern '*/seed_2/*/augment.csv' --compute_averages Y --output_path aggregate/zoom/ --output_filename all-stats-average-zoom-all.csv
 
