@@ -5,6 +5,79 @@ import sys
 import argparse
 
 import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+import numpy as np
+
+
+def compute_correlation(data1, data2):
+    if len(data1) != len(data2):
+        raise ValueError("Data1 and Data2 must be of the same length to compute correlation.")
+
+    # Extract y-values from both datasets
+    y_values1 = [y for _, y in data1]
+    y_values2 = [y for _, y in data2]
+
+    # Compute the Pearson correlation coefficient
+    correlation, _ = pearsonr(y_values1, y_values2)
+
+    return correlation
+
+
+def normalize(data):
+    """
+    Normalize the list of y-values using Min-Max scaling.
+
+    Args:
+    data (list): List of y-values.
+
+    Returns:
+    list: Normalized list of y-values.
+    """
+    min_val = min(data)
+    max_val = max(data)
+    return [(y - min_val) / (max_val - min_val) for y in data]
+
+
+def compute_normalized_correlation(data1, data2):
+    if len(data1) != len(data2):
+        raise ValueError("Data1 and Data2 must be of the same length to compute correlation.")
+
+    # Extract and normalize y-values from both datasets
+    y_values1 = normalize([y for _, y in data1])
+    y_values2 = normalize([y for _, y in data2])
+
+    # Compute the Pearson correlation coefficient
+    correlation, _ = pearsonr(y_values1, y_values2)
+
+    return correlation
+
+
+def plot_dual_dot_plots(data1, data2, data1_title, data2_title, augment_val, data1_ylabel, data2_ylabel):
+    # Create a figure and two subplots (axes), stacked vertically
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))  # figsize controls the size of the overall figure
+
+    # Plotting the first dataset on the first subplot
+    x_values1, y_values1 = zip(*data1)
+    ax1.scatter(x_values1, y_values1, color='blue', marker='o')  # Blue dots
+    ax1.set_title(data1_title)
+    ax1.set_xlabel(augment_val)
+    ax1.set_ylabel(data1_ylabel)
+    ax1.grid(True)  # Enable grid for better readability
+
+    # Plotting the second dataset on the second subplot
+    x_values2, y_values2 = zip(*data2)
+    ax2.scatter(x_values2, y_values2, color='green', marker='o')  # Green dots
+    ax2.set_title(data2_title)
+    ax2.set_xlabel(augment_val)
+    ax2.set_ylabel(data2_ylabel)
+    ax2.grid(True)
+
+    # Adjust layout to prevent overlap of subplots
+    plt.tight_layout()
+
+    # Display the plots
+    plt.show()
 
 
 def find_files(root_dir, subdir_pattern, show=False):
@@ -137,6 +210,17 @@ def generate_root_dirs_by_experiment_and_augment_degree_new(
     return [os.path.join(path, i) for i in agent_augment_types]
 
 
+def generate_root_dirs_by_experiment_and_augment_degree_new_augment_stats(exp_main_folder, exp_name, agent_name, list_vals=None):
+    if list_vals is None:
+        list_vals = [0.1]
+    root = '/Users/victor/Documents/python-projects/smart-rl/'
+    path = os.path.join(root, exp_main_folder, 'exp', exp_name)
+    agent_augment_types = []
+    for i in list_vals:
+        agent_augment_types.append(agent_name + str(i))
+    return [os.path.join(path, i) for i in agent_augment_types]
+
+
 def row_wise_stats(dataframes, column_name):
     concatenated = pd.concat([df.set_index('episode')[column_name] for df in dataframes], axis=1)
 
@@ -153,6 +237,66 @@ def row_wise_stats(dataframes, column_name):
     })
 
     return stats_df
+
+
+def compute_stats_across_dfs(dataframes, column_name):
+    concatenated = pd.Series()
+    for df in dataframes:
+        if column_name not in df.columns:
+            raise ValueError(f"The column '{column_name}' is not in one of the DataFrames.")
+        concatenated = pd.concat([concatenated, df[column_name]], ignore_index=True)
+
+    # Calculate the statistics
+    min_value = concatenated.min()
+    max_value = concatenated.max()
+    mean_value = concatenated.mean()
+
+    # Return the results as a dictionary
+    return {
+        'Min': min_value,
+        'Max': max_value,
+        'Mean': mean_value
+    }
+
+
+def generate_stats_for_augment_stats_directories(root_dirs, datasets_dict, column_name):
+    stats_results = {}
+    for root_dir in root_dirs:
+        try:
+            # Check if there are any DataFrames in the list for this directory
+            if root_dir in datasets_dict and datasets_dict[root_dir]:
+                # Compute aggregated statistics across all DataFrames for the current directory
+                stats_dict = compute_stats_across_dfs(datasets_dict[root_dir], column_name)
+                stats_results[root_dir] = stats_dict
+            else:
+                print(f"No data available for {root_dir}")
+        except Exception as e:
+            print(f"Error processing {root_dir}: {e}")
+            stats_results[root_dir] = None
+
+    return stats_results
+
+
+def extract_stat(stats_dict, stat_name, stat_type=None):
+    if stat_type:
+        return {float(key.split("-")[-1]): stats[stat_type][stat_name] for key, stats in stats_dict.items()}
+    return {float(key.split("-")[-1]): stats[stat_name] for key, stats in stats_dict.items()}
+
+
+def print_sorted(dictionary, sort_by='key', desc=True, print_it=True):
+    if sort_by == 'value':
+        # Sorting dictionary by value in descending order
+        sorted_items = sorted(dictionary.items(), key=lambda item: item[1], reverse=desc)
+    else:
+        # Sorting dictionary by key in ascending order
+        sorted_items = sorted(dictionary.items(), key=lambda item: item[0], reverse=desc)
+
+    # Print sorted dictionary
+    if print_it:
+        for key, value in sorted_items:
+            print(f"{key}: {value}")
+
+    return sorted_items
 
 
 def csv_to_dataframe(files_found):
