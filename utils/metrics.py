@@ -34,6 +34,7 @@ class StatsMetrics:
         self.manhattan(img_tensor_original, img_tensor_augmented)
         self.euclidian(img_tensor_original, img_tensor_augmented)
         self.cosine_dist(img_tensor_original, img_tensor_augmented)
+        self.ssim_dist(img_tensor_original, img_tensor_augmented)
 
     def set_mu_sigma(self, img_tensor_original, img_tensor_augmented):
         self.metrics['mu_original'] = img_tensor_original.float().mean()
@@ -42,7 +43,9 @@ class StatsMetrics:
         self.metrics['sigma_augment'] = img_tensor_augmented.std()
 
     def ssim_dist(self, img_tensor_original, img_tensor_augmented):
-        # obs_tensor = img_tensor_original.unsqueeze(1)
+        img_tensor_original = img_tensor_original.unsqueeze(1)
+        # img_tensor_augmented = img_tensor_augmented.unsqueeze(1)
+        # Compute SSIM and store the result
         self.metrics['ssim_dist'] = ssim(img_tensor_original, img_tensor_augmented, data_range=255.0, reduction='mean').item()
 
     def hamming(self, img_tensor_original, img_tensor_augmented):

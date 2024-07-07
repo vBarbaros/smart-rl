@@ -10,6 +10,251 @@ from scipy.stats import pearsonr
 import numpy as np
 
 
+def fetch_data_aug_stats(exp_type, env_name, exp_name, list_vals, show=False):
+    subdir_pattern = '*/*/augment.csv'
+    list_of_root_dirs_by_augment_stats = generate_root_dirs_by_experiment_and_augment_degree_new_augment_stats(
+        exp_main_folder='exp-' + exp_type,
+        exp_name=env_name + '_augment_stats',
+        agent_name='drqv2_aug_pixels-True-' + exp_name + '-',
+        list_vals=list_vals)
+
+    datasets_augstats_dict = load_datasets_by_directory(
+        list_of_root_dirs_by_augment_stats, subdir_pattern, show=False)
+
+    if show:
+        for root_directory in list_of_root_dirs_by_augment_stats:
+            print(root_directory, ' : ', len(datasets_augstats_dict[root_directory]))
+    return datasets_augstats_dict, list_of_root_dirs_by_augment_stats
+
+
+def fetch_data(exp_type, env_name, exp_name, list_vals, show=False):
+    subdir_pattern = '*/*/eval.csv'  # This example finds all .txt files in all subdirectories
+
+    list_of_root_dirs_by_augment_degree = generate_root_dirs_by_experiment_and_augment_degree_new(
+        exp_main_folder='exp-' + exp_type,
+        exp_name=env_name,
+        agent_name='drqv2_aug_pixels-True-' + exp_name + '-',
+        list_vals=list_vals)
+
+    datasets_dict = load_datasets_by_directory(list_of_root_dirs_by_augment_degree, subdir_pattern, show=show)
+    if show:
+        for root_directory in list_of_root_dirs_by_augment_degree:
+            print(root_directory, ' : ', len(datasets_dict[root_directory]))
+    return datasets_dict, list_of_root_dirs_by_augment_degree
+
+
+def display_analysis(datasets_dict, list_of_root_dirs_by_augment_degree, col_name, show=False):
+    column_name = col_name
+    result_stats = generate_stats_for_directories(list_of_root_dirs_by_augment_degree, datasets_dict, column_name)
+    summary_statistics = compute_summary_stats(result_stats)
+
+    if show:
+        for key, stats in summary_statistics.items():
+            print(f"Directory: {key}")
+            print("Sum Statistics:", stats['Sum Statistics'])
+            print("Max Statistics:", stats['Max Statistics'])
+
+    print("\n...printing Mean over Sums")
+    mean_vals_over_sums_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
+    sorted_items = print_sorted(mean_vals_over_sums_performance, sort_by='value', desc=True)
+
+    MIN_TOP_FIVE = min([i[0] for i in sorted_items[:5]])
+    MAX_TOP_FIVE = max([i[0] for i in sorted_items[:5]])
+
+    print("\n...printing Max over Sums")
+    max_vals_over_sums_performance = extract_stat(summary_statistics, stat_name='Sum Max', stat_type='Sum Statistics')
+    sorted_items = print_sorted(max_vals_over_sums_performance, sort_by='value', desc=True)
+
+    print("\n...printing Max over Maxes")
+    max_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Max', stat_type='Max Statistics')
+    sorted_items = print_sorted(max_vals_over_max_performance, sort_by='value', desc=True)
+
+    print("\n...printing Mean over Maxes")
+    mean_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Mean', stat_type='Max Statistics')
+    sorted_items = print_sorted(mean_vals_over_max_performance, sort_by='key', desc=True)
+    return MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics
+
+
+def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, stat_name, MIN_TOP_FIVE, MAX_TOP_FIVE, show=True):
+    print('PLOTTING AUGMENT STATS - ', stat_name)
+    result_stats = generate_stats_for_augment_stats_directories(list_of_root_dirs_by_augment_stats, datasets_augstats_dict, stat_name)
+    mean_vals_statdistances = extract_stat(result_stats, stat_name='Mean', stat_type=None)
+    sorted_mean_diststats = print_sorted(mean_vals_statdistances, sort_by='key', desc=False, print_it=False)
+    print(sorted_mean_diststats)
+
+    min_vals_statdistances = extract_stat(result_stats, stat_name='Min', stat_type=None)
+    sorted_min_diststats = print_sorted(min_vals_statdistances, sort_by='key', desc=False, print_it=False)
+
+    max_vals_statdistances = extract_stat(result_stats, stat_name='Max', stat_type=None)
+    sorted_max_diststats = print_sorted(max_vals_statdistances, sort_by='key', desc=False, print_it=False)
+
+    categories = [sm[0] for sm in sorted_mean_diststats]
+    mean_sum_stats_vals = [sm[1] for sm in sorted_mean_diststats]
+    min_sum_vals = [sm[1] for sm in sorted_min_diststats]
+    max_sum_vals = [sm[1] for sm in sorted_max_diststats]
+
+    # Calculate error values (difference between mean and min/max)
+    lower_error = np.array(mean_sum_stats_vals) - np.array(min_sum_vals)
+    upper_error = np.array(max_sum_vals) - np.array(mean_sum_stats_vals)
+    errors = [lower_error, upper_error]
+
+    # Plotting the bar plot with error bars
+    plt.figure(figsize=(10, 6))
+    plt.bar(categories, mean_sum_stats_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
+    plt.title('Performance Metrics with Error Bars')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.show()
+
+    # Scatter Plot with Error Bars
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(categories, mean_sum_stats_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean with Min-Max Range')
+    plt.title('Scatter Plot with Error Bars')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.show()
+
+    # Line Plot with Shaded Error Region
+    plt.figure(figsize=(10, 6))
+    plt.plot(categories, mean_sum_stats_vals, marker='o', color='b', label='Mean')
+    plt.fill_between(categories, min_sum_vals, max_sum_vals, color='b', alpha=0.2, label='Min-Max Range')
+    plt.title('Line Plot with Shaded Error Region')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.show()
+
+    # Define the range for the vertical highlight
+    highlight_xmin = MIN_TOP_FIVE  # Index of the second category
+    highlight_xmax = MAX_TOP_FIVE  # Index of the fourth category
+
+    if show:
+        for i in range(len(sorted_mean_diststats)):
+            if i <= highlight_xmax and i >= highlight_xmin:
+                print('padding:', sorted_mean_diststats[i][0], stat_name + ':', sorted_mean_diststats[i][1])
+
+    # Bar Plot with Error Bars and Vertical Highlight
+    plt.figure(figsize=(10, 6))
+    plt.bar(categories, mean_sum_stats_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
+    plt.axvspan(highlight_xmin - 0.5, highlight_xmax + 0.5, color='yellow', alpha=0.3)
+    plt.title('Performance Metrics with Error Bars')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.show()
+
+    # Scatter Plot with Error Bars and Vertical Highlight
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(categories, mean_sum_stats_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean with Min-Max Range')
+    plt.axvspan(highlight_xmin - 0.5, highlight_xmax + 0.5, color='yellow', alpha=0.3)
+    plt.title('Scatter Plot with Error Bars')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.show()
+
+    # Line Plot with Shaded Error Region and Vertical Highlight
+    plt.figure(figsize=(10, 6))
+    plt.plot(categories, mean_sum_stats_vals, marker='o', color='b', label='Mean')
+    plt.fill_between(categories, min_sum_vals, max_sum_vals, color='b', alpha=0.2, label='Min-Max Range')
+    plt.axvspan(highlight_xmin - 0.5, highlight_xmax + 0.5, color='yellow', alpha=0.3)
+    plt.title('Line Plot with Shaded Error Region')
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.show()
+
+def plot_performance_all(summary_statistics):
+    # Sample data with mean, min, and max values for each category
+    print("\n...plotting Max Stats")
+    min_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Min', stat_type='Max Statistics')
+    mean_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Mean', stat_type='Max Statistics')
+    max_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Max', stat_type='Max Statistics')
+
+    x_label = 'Padding (in pixels)'
+    y_label = 'Total Sum of Episodic Rewards'
+    categories = list(max_vals_over_max_performance.keys())
+    mean_vals = list(mean_vals_over_max_performance.values())
+    min_vals = list(min_vals_over_max_performance.values())
+    max_vals = list(max_vals_over_max_performance.values())
+
+    # Calculate error values (difference between mean and min/max)
+    lower_error = np.array(mean_vals) - np.array(min_vals)
+    upper_error = np.array(max_vals) - np.array(mean_vals)
+    errors = [lower_error, upper_error]
+
+    # Plotting the bar plot with error bars
+    plt.figure(figsize=(10, 6))
+    plt.bar(categories, mean_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
+    plt.title('Performance Metrics with Error Bars')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.show()
+
+    # Scatter Plot with Error Bars
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(categories, mean_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean with Min-Max Range')
+    plt.title('Scatter Plot with Error Bars')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+    # Line Plot with Shaded Error Region
+    plt.figure(figsize=(10, 6))
+    plt.plot(categories, mean_vals, marker='o', color='b', label='Mean')
+    plt.fill_between(categories, min_vals, max_vals, color='b', alpha=0.2, label='Min-Max Range')
+    plt.title('Line Plot with Shaded Error Region')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+    # Sample data with mean, min, and max values for each category
+    print("\n...Plotting Sum Stats")
+
+    min_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Min', stat_type='Sum Statistics')
+    mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
+    max_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Max', stat_type='Sum Statistics')
+
+    categories = list(min_vals_over_sum_performance.keys())
+    mean_sum_vals = list(mean_vals_over_sum_performance.values())
+    min_sum_vals = list(min_vals_over_sum_performance.values())
+    max_sum_vals = list(max_vals_over_sum_performance.values())
+
+    # Calculate error values (difference between mean and min/max)
+    lower_error = np.array(mean_sum_vals) - np.array(min_sum_vals)
+    upper_error = np.array(max_sum_vals) - np.array(mean_sum_vals)
+    errors = [lower_error, upper_error]
+
+    # Plotting the bar plot with error bars
+    plt.figure(figsize=(10, 6))
+    plt.bar(categories, mean_sum_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
+    plt.title('Performance Metrics with Error Bars')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.show()
+
+    # Scatter Plot with Error Bars
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(categories, mean_sum_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean with Min-Max Range')
+    plt.title('Scatter Plot with Error Bars')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+    # Line Plot with Shaded Error Region
+    plt.figure(figsize=(10, 6))
+    plt.plot(categories, mean_sum_vals, marker='o', color='b', label='Mean')
+    plt.fill_between(categories, min_sum_vals, max_sum_vals, color='b', alpha=0.2, label='Min-Max Range')
+    plt.title('Line Plot with Shaded Error Region')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+
 def compute_correlation(data1, data2):
     if len(data1) != len(data2):
         raise ValueError("Data1 and Data2 must be of the same length to compute correlation.")
