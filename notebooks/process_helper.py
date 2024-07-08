@@ -72,7 +72,7 @@ def display_analysis(datasets_dict, list_of_root_dirs_by_augment_degree, col_nam
     print("\n...printing Mean over Maxes")
     mean_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Mean', stat_type='Max Statistics')
     sorted_items = print_sorted(mean_vals_over_max_performance, sort_by='key', desc=True)
-    return MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics
+    return MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics, sorted_items
 
 
 def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, stat_name, MIN_TOP_FIVE, MAX_TOP_FIVE, show=True):
@@ -80,6 +80,8 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     result_stats = generate_stats_for_augment_stats_directories(list_of_root_dirs_by_augment_stats, datasets_augstats_dict, stat_name)
     mean_vals_statdistances = extract_stat(result_stats, stat_name='Mean', stat_type=None)
     sorted_mean_diststats = print_sorted(mean_vals_statdistances, sort_by='key', desc=False, print_it=False)
+    vals_to_str = " | ".join([str(t[1]) for t in sorted_mean_diststats])
+    print(vals_to_str)
     print(sorted_mean_diststats)
 
     min_vals_statdistances = extract_stat(result_stats, stat_name='Min', stat_type=None)
@@ -163,6 +165,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     plt.ylabel('Values')
     plt.legend()
     plt.show()
+    return sorted_mean_diststats
 
 def plot_performance_all(summary_statistics):
     # Sample data with mean, min, and max values for each category
