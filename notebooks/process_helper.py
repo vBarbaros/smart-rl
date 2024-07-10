@@ -54,25 +54,25 @@ def display_analysis(datasets_dict, list_of_root_dirs_by_augment_degree, env_nam
             print(f"Directory: {key}")
             print("Sum Statistics:", stats['Sum Statistics'])
             print("Max Statistics:", stats['Max Statistics'])
-
-    print("\n", env_name, "...printing Mean over Sums for", col_name, "(", explainer, ")")
+    if show:
+        print("\n", env_name, "...printing Mean over Sums for", col_name, "(", explainer, ")")
     mean_vals_over_sums_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
-    sum_mean_sorted_items = print_sorted(mean_vals_over_sums_performance, sort_by='value', desc=True)
+    sum_mean_sorted_items = print_sorted(mean_vals_over_sums_performance, sort_by='value', desc=True, print_it=show)
 
     MIN_TOP_FIVE = min([i[0] for i in sum_mean_sorted_items[:5]])
     MAX_TOP_FIVE = max([i[0] for i in sum_mean_sorted_items[:5]])
-
-    print("\n", env_name, "...printing Max over Sums for", col_name, "(", explainer, ")")
+    if show:
+        print("\n", env_name, "...printing Max over Sums for", col_name, "(", explainer, ")")
     max_vals_over_sums_performance = extract_stat(summary_statistics, stat_name='Sum Max', stat_type='Sum Statistics')
-    sorted_items = print_sorted(max_vals_over_sums_performance, sort_by='value', desc=True)
-
-    print("\n", env_name, "...printing Max over Maxes for", col_name, "(", explainer, ")")
+    sorted_items = print_sorted(max_vals_over_sums_performance, sort_by='value', desc=True, print_it=show)
+    if show:
+        print("\n", env_name, "...printing Max over Maxes for", col_name, "(", explainer, ")")
     max_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Max', stat_type='Max Statistics')
-    sorted_items = print_sorted(max_vals_over_max_performance, sort_by='value', desc=True)
-
-    print("\n", env_name, "...printing Mean over Maxes for", col_name, "(", explainer, ")")
+    sorted_items = print_sorted(max_vals_over_max_performance, sort_by='value', desc=show, print_it=show)
+    if show:
+        print("\n", env_name, "...printing Mean over Maxes for", col_name, "(", explainer, ")")
     mean_vals_over_max_performance = extract_stat(summary_statistics, stat_name='Max Mean', stat_type='Max Statistics')
-    sorted_items = print_sorted(mean_vals_over_max_performance, sort_by='value', desc=True)
+    sorted_items = print_sorted(mean_vals_over_max_performance, sort_by='value', desc=show, print_it=show)
     return MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics, sum_mean_sorted_items
 
 
@@ -265,6 +265,49 @@ def plot_performance_all(summary_statistics, env_name, performance_param, x_labe
     plt.show()
 
 
+def compute_variance(data):
+    mean = np.mean(data)
+    variance = np.mean((data - mean) ** 2)
+    return variance
+
+
+def plot_performance_shaded_area(summary_statistics, env_name, performance_param, x_label, use_var=False):
+    y_label = 'Total Sum of Episodic Rewards'
+
+    # print("\n", env_name, "...Plotting Sum Stats for", performance_param)
+    mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
+    var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Var Mean', stat_type='Var Statistics')
+    # print(mean_vals_over_sum_performance)
+    # print(var_vals_over_sum_performance)
+    categories = list(mean_vals_over_sum_performance.keys())
+    mean_sum_vals = list(mean_vals_over_sum_performance.values())
+
+    std_sum_vals = [np.sqrt(var) for var in var_vals_over_sum_performance.values()]
+    if use_var:
+        var_sum_vals = list(var_vals_over_sum_performance.values())
+
+    # Calculate the shaded area (mean ± standard deviation)
+    lower_bound = [mean - 2 * std for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    upper_bound = [mean + 2 * std for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    if use_var:
+        lower_bound = [mean - var for mean, var in zip(mean_sum_vals, var_sum_vals)]
+        upper_bound = [mean + var for mean, var in zip(mean_sum_vals, var_sum_vals)]
+
+    plot_label = 'Mean ± 2*StdDev'
+    if use_var:
+        plot_label = 'Mean ± Var'
+
+    # Line Plot with Shaded Error Region
+    plt.figure(figsize=(10, 6))
+    plt.plot(categories, mean_sum_vals, marker='o', color='b', label='Mean')
+    plt.fill_between(categories, lower_bound, upper_bound, color='b', alpha=0.3, label=plot_label)
+    plt.title(env_name + ' - Line Plot with Shaded Error Region')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+
 def compute_correlation(data1, data2):
     if len(data1) != len(data2):
         raise ValueError("Data1 and Data2 must be of the same length to compute correlation.")
@@ -416,10 +459,33 @@ def compute_summary_stats(stats_dict):
                 'Sum Statistics': sum_stats,
                 'Max Statistics': max_stats
             }
+
+            # Compute variance and standard deviation of 'Min', 'Max', and 'Mean' columns
+            var_stats = {
+                'Var Min': df['Min'].var(),
+                'Var Max': df['Max'].var(),
+                'Var Mean': df['Mean'].var()
+            }
+
+            stddev_stats = {
+                'StdDev Min': np.sqrt(var_stats['Var Min']),
+                'StdDev Max': np.sqrt(var_stats['Var Max']),
+                'StdDev Mean': np.sqrt(var_stats['Var Mean'])
+            }
+
+            # Store results in a structured dictionary
+            summary_stats[key] = {
+                'Sum Statistics': sum_stats,
+                'Max Statistics': max_stats,
+                'Var Statistics': var_stats,
+                'StdDev Statistics': stddev_stats
+            }
         else:
             summary_stats[key] = {
                 'Sum Statistics': {'Sum Min': None, 'Sum Max': None, 'Sum Mean': None},
-                'Max Statistics': {'Max Min': None, 'Max Max': None, 'Max Mean': None}
+                'Max Statistics': {'Max Min': None, 'Max Max': None, 'Max Mean': None},
+                'Var Statistics': {'Var Min': None, 'Var Max': None, 'Var Mean': None},
+                'StdDev Statistics': {'StdDev Min': None, 'StdDev Max': None, 'StdDev Mean': None}
             }
             print(f"No data or empty DataFrame for key: {key}")
 
