@@ -287,8 +287,8 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
         var_sum_vals = list(var_vals_over_sum_performance.values())
 
     # Calculate the shaded area (mean ± standard deviation)
-    lower_bound = [mean - 2 * std for mean, std in zip(mean_sum_vals, std_sum_vals)]
-    upper_bound = [mean + 2 * std for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    lower_bound = [mean - (2 * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    upper_bound = [mean + (2 * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
     if use_var:
         lower_bound = [mean - var for mean, var in zip(mean_sum_vals, var_sum_vals)]
         upper_bound = [mean + var for mean, var in zip(mean_sum_vals, var_sum_vals)]
