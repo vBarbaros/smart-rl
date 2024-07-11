@@ -4,6 +4,19 @@ import torch.nn.functional as F
 from piq import ssim
 
 
+def normalize_tensor(tensor):
+    tensor = tensor.clone()
+    tensor = tensor - tensor.min()
+    tensor = tensor / tensor.max() * 255.0
+    return tensor
+
+
+def check_and_normalize(tensor):
+    if tensor.max() > 255.0 or tensor.min() < 0.0:
+        tensor = normalize_tensor(tensor)
+    return tensor
+
+
 class StatsMetrics:
     def __init__(self):
         self.metrics = {}
@@ -26,21 +39,6 @@ class StatsMetrics:
         return self.metrics
 
     def compute_all_metrics(self, img_tensor_original, img_tensor_augmented):
-        def normalize_tensor(tensor):
-            tensor = tensor.clone()
-            tensor = tensor - tensor.min()
-            tensor = tensor / tensor.max() * 255.0
-            return tensor
-
-        def check_and_normalize(tensor):
-            if tensor.max() > 255.0 or tensor.min() < 0.0:
-                tensor = normalize_tensor(tensor)
-            return tensor
-
-        # Check and normalize if necessary
-        img_tensor_original = check_and_normalize(img_tensor_original)
-        img_tensor_augmented = check_and_normalize(img_tensor_augmented)
-
         self.hamming(img_tensor_original, img_tensor_augmented)
         self.bhattacharyya(img_tensor_original, img_tensor_augmented)
         self.kl_div(img_tensor_original, img_tensor_augmented)
@@ -57,6 +55,10 @@ class StatsMetrics:
         self.metrics['sigma_augment'] = img_tensor_augmented.std()
 
     def ssim_dist(self, img_tensor_original, img_tensor_augmented):
+        # Check and normalize if necessary
+        img_tensor_original = check_and_normalize(img_tensor_original)
+        img_tensor_augmented = check_and_normalize(img_tensor_augmented)
+
         img_tensor_original = img_tensor_original.unsqueeze(1)
         # img_tensor_augmented = img_tensor_augmented.unsqueeze(1)
         # Compute SSIM and store the result

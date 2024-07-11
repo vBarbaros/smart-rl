@@ -76,6 +76,65 @@ def display_analysis(datasets_dict, list_of_root_dirs_by_augment_degree, env_nam
     return MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics, sum_mean_sorted_items
 
 
+def plot_aug_stats_dotplot(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, stat_name, MIN_TOP_FIVE, MAX_TOP_FIVE, xlabels, show=True):
+    print('PLOTTING AUGMENT STATS - ', stat_name)
+    result_stats = generate_stats_for_augment_stats_directories(list_of_root_dirs_by_augment_stats, datasets_augstats_dict, stat_name)
+    mean_vals_statdistances = extract_stat(result_stats, stat_name='Mean', stat_type=None)
+    sorted_mean_diststats = print_sorted(mean_vals_statdistances, sort_by='key', desc=False, print_it=False)
+    vals_to_str = " | ".join([str(t[1]) for t in sorted_mean_diststats])
+    # print(vals_to_str)
+    # print(sorted_mean_diststats)
+
+    min_vals_statdistances = extract_stat(result_stats, stat_name='Min', stat_type=None)
+    sorted_min_diststats = print_sorted(min_vals_statdistances, sort_by='key', desc=False, print_it=False)
+
+    max_vals_statdistances = extract_stat(result_stats, stat_name='Max', stat_type=None)
+    sorted_max_diststats = print_sorted(max_vals_statdistances, sort_by='key', desc=False, print_it=False)
+
+    categories = [sm[0] for sm in sorted_mean_diststats]
+    mean_sum_stats_vals = [sm[1] for sm in sorted_mean_diststats]
+    min_sum_vals = [sm[1] for sm in sorted_min_diststats]
+    max_sum_vals = [sm[1] for sm in sorted_max_diststats]
+
+    # Calculate error values (difference between mean and min/max)
+    lower_error = np.array(mean_sum_stats_vals) - np.array(min_sum_vals)
+    upper_error = np.array(max_sum_vals) - np.array(mean_sum_stats_vals)
+    errors = [lower_error, upper_error]
+
+    ylabels = 'Statistical Distance Units'
+
+    # Define the range for the vertical highlight
+    highlight_xmin = MIN_TOP_FIVE  # Index of the second category
+    highlight_xmax = MAX_TOP_FIVE  # Index of the fourth category
+
+    # Plotting the dot plot with highlighted points for MAX TOP FIVE
+    plt.figure(figsize=(12, 8))
+    print(datasets_augstats_dict)
+    for category in [int(x) for x in categories]:
+        all_values = datasets_augstats_dict[category][stat_name]
+        x_values = [category] * len(all_values)
+        y_values = all_values
+
+        plt.scatter(x_values, y_values, color='blue', s=10, alpha=0.6)
+
+        # Highlight the MAX TOP FIVE points
+        for value in y_values:
+            if value >= highlight_xmin and value <= highlight_xmax:
+                plt.scatter(category, value, color='red', s=100, alpha=0.8)
+
+    # plt.title(f'{stat_name} Distribution with Highlights for {env_name}')
+    plt.title(f'{stat_name} Distribution with Highlights for ...')
+    plt.xlabel(xlabels)
+    plt.ylabel(ylabels)
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    if show:
+        plt.show()
+
+    return sorted_mean_diststats
+
+
 def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, stat_name, MIN_TOP_FIVE, MAX_TOP_FIVE, xlabels, show=True):
     print('PLOTTING AUGMENT STATS - ', stat_name)
     result_stats = generate_stats_for_augment_stats_directories(list_of_root_dirs_by_augment_stats, datasets_augstats_dict, stat_name)
@@ -271,7 +330,7 @@ def compute_variance(data):
     return variance
 
 
-def plot_performance_shaded_area(summary_statistics, env_name, performance_param, x_label, use_var=False):
+def plot_performance_shaded_area(summary_statistics, env_name, performance_param, x_label, use_var=False, times_stddev=2):
     y_label = 'Total Sum of Episodic Rewards'
 
     # print("\n", env_name, "...Plotting Sum Stats for", performance_param)
@@ -287,13 +346,13 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
         var_sum_vals = list(var_vals_over_sum_performance.values())
 
     # Calculate the shaded area (mean ± standard deviation)
-    lower_bound = [mean - (2 * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
-    upper_bound = [mean + (2 * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    lower_bound = [mean - (times_stddev * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
+    upper_bound = [mean + (times_stddev * std) for mean, std in zip(mean_sum_vals, std_sum_vals)]
     if use_var:
         lower_bound = [mean - var for mean, var in zip(mean_sum_vals, var_sum_vals)]
         upper_bound = [mean + var for mean, var in zip(mean_sum_vals, var_sum_vals)]
 
-    plot_label = 'Mean ± 2*StdDev'
+    plot_label = 'Mean ± ' + str(times_stddev) + '*StdDev'
     if use_var:
         plot_label = 'Mean ± Var'
 
@@ -571,12 +630,14 @@ def compute_stats_across_dfs(dataframes, column_name):
     min_value = concatenated.min()
     max_value = concatenated.max()
     mean_value = concatenated.mean()
+    var_value = concatenated.var()
 
     # Return the results as a dictionary
     return {
         'Min': min_value,
         'Max': max_value,
-        'Mean': mean_value
+        'Mean': mean_value,
+        'Var': var_value
     }
 
 

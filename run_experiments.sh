@@ -27,10 +27,10 @@ for i in 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.6 1.7 1.8 1.9
     # Run the Python script with the current agent value in the background
 #    python get_augment_stats.py task=cartpole_balance_sparse agent=drqv2_aug augment_type=rotate augment_param=$i
 #    python get_augment_stats.py task=finger_turn_hard agent=drqv2_aug augment_type=rotate augment_param=$i
-    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=contrast augment_param=$i
+#    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=contrast augment_param=$i
 #    python get_augment_stats.py task=quadruped_run agent=drqv2_aug augment_type=rotate augment_param=$i
 #    python get_augment_stats.py task=reacher_hard agent=drqv2_aug augment_type=rotate augment_param=$i
-#    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=contrast augment_param=$i
+    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=contrast augment_param=$i
     # Capture the PID of the last background process and store it
 #    echo $! >> "$pid_file"
 done
