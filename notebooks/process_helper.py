@@ -10,6 +10,106 @@ from scipy.stats import pearsonr
 import numpy as np
 
 
+def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
+    """
+    Plots statistical distance metrics for multiple environments.
+    Highlights the max value entry for each environment with a larger red dot.
+
+    Parameters:
+    STATS_DATA (dict): Dictionary where keys are environment names and values are dictionaries of stat names to lists of values.
+    MAX_INDICES (dict): Dictionary where keys are environment names and values are dictionaries of stat names to max value indices.
+    stats_column_names (list): List of stat names to process.
+    """
+    if show:
+        for stat_name in stats_column_names:
+            # Create the plot for each stat_name
+            plt.figure(figsize=(12, 8))
+            YLABEL_STATS = f'Statistical Distance Units for {stat_name}'
+
+            for i, (env, statvals) in enumerate(STATS_DATA.items()):
+                values = statvals[stat_name]
+                x_values = [i] * len(values)  # All values for this environment are plotted at the same x position
+
+                for j, val in enumerate(values):
+                    if j == MAX_INDICES[env][stat_name]:
+                        plt.scatter(x_values[j], val, color='red', s=300, zorder=2)  # Highlight max entry
+                    else:
+                        plt.scatter(x_values[j], val, color='blue', s=30, zorder=1)
+
+                plt.plot([i] * len(values), values, linestyle=':', color='black')
+
+            # Set x-ticks to environment names
+            plt.xticks(range(len(STATS_DATA)), STATS_DATA.keys(), rotation=45, ha='right')
+            TITLE_STATS = f'{stat_name} Distance Values over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Distance Data Point Corresponding to Max Environment Performance'
+            plt.title(TITLE_STATS)
+            plt.xlabel(XLABEL_STATS)
+            plt.ylabel(YLABEL_STATS)
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
+
+
+def process_and_generate_aug_stats(EXP_TYPE, ENV_NAME, EXP_NAME, LIST_VALS, MAX_TOP_FIVE, stats_column_names, STATS_DATA, MAX_INDICES):
+    """
+    Fetches augmentation stats, performs analysis, and updates STATS_DATA and MAX_INDICES.
+
+    Parameters:
+    EXP_TYPE (str): Experiment type.
+    ENV_NAME (str): Environment name.
+    EXP_NAME (str): Experiment name.
+    LIST_VALS (list): List of values used in the experiment.
+    MAX_TOP_FIVE (float): Maximum top value for the environment.
+    stats_column_names (list): List of stat names to process.
+    STATS_DATA (dict): Dictionary to store stats data.
+    MAX_INDICES (dict): Dictionary to store max indices for each environment.
+    """
+    datasets_augstats_dict, list_of_root_dirs_by_augment_stats = fetch_data_aug_stats(
+        EXP_TYPE, ENV_NAME, EXP_NAME, LIST_VALS, show=False)
+
+    ENV_NAME_ST = ENV_NAME + '_' + EXP_TYPE + '_max_at_' + str(MAX_TOP_FIVE)
+    STATS_DATA[ENV_NAME_ST], MAX_INDICES[ENV_NAME_ST] = {}, {}
+
+    for stat_name in stats_column_names:
+        result_stats = generate_stats_for_augment_stats_directories(
+            list_of_root_dirs_by_augment_stats, datasets_augstats_dict, stat_name)
+        mean_vals_statdistances = extract_stat(result_stats, stat_name='Mean', stat_type=None)
+        sorted_mean_diststats = print_sorted(mean_vals_statdistances, sort_by='key', desc=False, print_it=False)
+
+        STATS_DATA[ENV_NAME_ST][stat_name] = [s[1] for s in sorted_mean_diststats]
+        MAX_INDICES[ENV_NAME_ST][stat_name] = [s[0] for s in sorted_mean_diststats].index(MAX_TOP_FIVE)
+
+
+def process_and_analyze_data(
+        EXP_TYPE, ENV_NAME, EXP_NAME, LIST_VALS, column_name, XLABEL_STATS, USE_VARIANCE, TIMES_STDDEV, DICTS_ALL_STATS, show=True):
+    """
+    Fetches data, performs analysis, and updates DICTS_ALL_STATS.
+
+    Parameters:
+    EXP_TYPE (str): Experiment type.
+    ENV_NAME (str): Environment name.
+    EXP_NAME (str): Experiment name.
+    LIST_VALS (list): List of values used in the experiment.
+    column_name (str): Column name for analysis.
+    XLABEL_STATS (str): Label for x-axis in the plot.
+    USE_VARIANCE (bool): Flag to indicate if variance should be used.
+    TIMES_STDDEV (int): Multiplier for standard deviation.
+    DICTS_ALL_STATS (dict): Dictionary to store all statistics.
+    """
+    datasets_dict, list_of_root_dirs_by_augment_degree = fetch_data(
+        EXP_TYPE, ENV_NAME, EXP_NAME, LIST_VALS, show=False)
+
+    MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics, sorted_items = display_analysis(
+        datasets_dict, list_of_root_dirs_by_augment_degree, ENV_NAME, column_name, show=False)
+
+    MAX_TOP_FIVE = sorted_items[0][0]
+    DICTS_ALL_STATS[ENV_NAME][column_name + '_sorted'] = sorted_items
+    DICTS_ALL_STATS[ENV_NAME]['range_top_five'] = (MIN_TOP_FIVE, MAX_TOP_FIVE)
+    if show:
+        plot_performance_shaded_area(
+            summary_statistics, ENV_NAME, column_name, XLABEL_STATS, use_var=USE_VARIANCE, times_stddev=TIMES_STDDEV)
+    return MAX_TOP_FIVE
+
+
 def fetch_data_aug_stats(exp_type, env_name, exp_name, list_vals, show=False):
     subdir_pattern = '*/*/augment.csv'
     list_of_root_dirs_by_augment_stats = generate_root_dirs_by_experiment_and_augment_degree_new_augment_stats(
