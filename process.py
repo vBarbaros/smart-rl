@@ -157,11 +157,11 @@ def main():
 
     # root_directory = 'exp-pad/exp/cartpole_balance_sparse'
     # root_directory = 'exp-pad/exp/pendulum_swingup'
-    root_directory = 'exp-pad/exp/walker_run'
+    # root_directory = 'exp-pad/exp/walker_run'
 
     # root_directory = 'exp-rot/exp/cartpole_balance_sparse'
     # root_directory = 'exp-rot/exp/pendulum_swingup'
-    # root_directory = 'exp-rot/exp/walker_run'
+    root_directory = 'exp-rot/exp/walker_run'
 
 
     # root_directory = 'exp-contrast/exp/cartpole_balance_sparse'
