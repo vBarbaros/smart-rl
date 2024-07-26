@@ -10,6 +10,48 @@ from scipy.stats import pearsonr
 import numpy as np
 
 
+def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
+    """
+    Plots statistical distance metrics for multiple environments.
+    Highlights the max value entry for each environment with a larger red dot.
+{'cartpole_balance_sparse': {'perform': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}, 'pendulum_swingup': {'perform': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}, 'walker_run': {'perform': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}}
+{'cartpole_balance_sparse_pad_max_at_3.0': {'manhattan': 3, 'ssim_dist': 3, 'kl_div': 3, 'hamming': 3, 'euclidian': 3, 'chebyshev': 3, 'cosine_dist': 3, 'bhattacharyya': 3}, 'pendulum_swingup_pad_max_at_5.0': {'manhattan': 5, 'ssim_dist': 5, 'kl_div': 5, 'hamming': 5, 'euclidian': 5, 'chebyshev': 5, 'cosine_dist': 5, 'bhattacharyya': 5}, 'walker_run_pad_max_at_5.0': {'manhattan': 5, 'ssim_dist': 5, 'kl_div': 5, 'hamming': 5, 'euclidian': 5, 'chebyshev': 5, 'cosine_dist': 5, 'bhattacharyya': 5}}
+['perform']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] cartpole_balance_sparse {'perform': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} perform
+    Parameters:
+    STATS_DATA (dict): Dictionary where keys are environment names and values are dictionaries of stat names to lists of values.
+    MAX_INDICES (dict): Dictionary where keys are environment names and values are dictionaries of stat names to max value indices.
+    stats_column_names (list): List of stat names to process.
+    """
+    if show:
+        for stat_name in stats_column_names:
+            # Create the plot for each stat_name
+            plt.figure(figsize=(12, 8))
+            YLABEL_STATS = f'Statistical Distance Units for {stat_name}'
+
+            for i, (env, statvals) in enumerate(STATS_DATA.items()):
+                values = statvals[stat_name]
+                x_values = [i] * len(values)  # All values for this environment are plotted at the same x position
+
+                for j, val in enumerate(values):
+                    if j == MAX_INDICES[env][stat_name]:
+                        plt.scatter(x_values[j], val, color='red', s=300, zorder=2)  # Highlight max entry
+                    else:
+                        plt.scatter(x_values[j], val, color='blue', s=30, zorder=1)
+
+                plt.plot([i] * len(values), values, linestyle=':', color='black')
+
+            # Set x-ticks to environment names
+            plt.xticks(range(len(STATS_DATA)), STATS_DATA.keys(), rotation=45, ha='right')
+            TITLE_STATS = f'{stat_name} Distance Values over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Distance Data Point Corresponding to Max Environment Performance'
+            plt.title(TITLE_STATS)
+            plt.xlabel(XLABEL_STATS)
+            plt.ylabel(YLABEL_STATS)
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
+
+
 def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
     """
     Plots statistical distance metrics for multiple environments.
