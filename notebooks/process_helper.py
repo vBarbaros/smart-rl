@@ -10,6 +10,14 @@ from scipy.stats import pearsonr
 import numpy as np
 
 
+def replace_underscores_with_newlines(s, positions):
+    parts = s.split('_')
+    for pos in positions:
+        if pos < len(parts):
+            parts[pos] = '\n' + parts[pos]
+    return ' '.join(parts)
+
+
 def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
     """
     Plots statistical distance metrics for multiple environments.
@@ -45,7 +53,15 @@ def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_
                 plt.plot([i] * len(values), values, linestyle=':', color='black')
 
             # Set x-ticks to environment names
-            plt.xticks(range(len(STATS_DATA)), STATS_DATA.keys(), rotation=45, ha='right')
+            # print(STATS_DATA.keys())
+            modified_strings = []
+            for s in STATS_DATA.keys():
+                if s.startswith('cartpole_balance_sparse'):
+                    modified_strings.append(replace_underscores_with_newlines(s, [3, 4]))
+                else:
+                    modified_strings.append(replace_underscores_with_newlines(s, [2, 3]))
+
+            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center')
             TITLE_STATS = (f'{stat_name} Augment Params over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Augment '
                            f'Parameter Corresponding to Max Environment Performance')
             plt.title(TITLE_STATS)
@@ -53,6 +69,7 @@ def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_
             plt.ylabel(YLABEL_STATS)
             plt.grid(True)
             plt.tight_layout()
+            save_plots_to_imgs(TITLE_STATS)
             plt.show()
 
 
@@ -85,14 +102,23 @@ def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_name
                 plt.plot([i] * len(values), values, linestyle=':', color='black')
 
             # Set x-ticks to environment names
-            plt.xticks(range(len(STATS_DATA)), STATS_DATA.keys(), rotation=45, ha='right')
+            modified_strings = []
+            for s in STATS_DATA.keys():
+                if s.startswith('cartpole_balance_sparse'):
+                    modified_strings.append(replace_underscores_with_newlines(s, [3, 4]))
+                else:
+                    modified_strings.append(replace_underscores_with_newlines(s, [2, 3]))
+
+            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center')
             TITLE_STATS = f'{stat_name} Distance Values over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Distance Data Point Corresponding to Max Environment Performance'
             plt.title(TITLE_STATS)
             plt.xlabel(XLABEL_STATS)
             plt.ylabel(YLABEL_STATS)
             plt.grid(True)
             plt.tight_layout()
+            save_plots_to_imgs(TITLE_STATS)
             plt.show()
+
 
 
 def process_and_generate_aug_stats(EXP_TYPE, ENV_NAME, EXP_NAME, LIST_VALS, MAX_TOP_FIVE, stats_column_names, STATS_DATA, MAX_INDICES):
@@ -506,11 +532,24 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
     plt.figure(figsize=(10, 6))
     plt.plot(categories, mean_sum_vals, marker='o', color='b', label='Mean')
     plt.fill_between(categories, lower_bound, upper_bound, color='b', alpha=0.3, label=plot_label)
-    plt.title(env_name + ' - Line Plot with Shaded Error Region')
+    title = env_name + ' - Line Plot with Shaded Error Region'
+    plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.legend()
+    save_plots_to_imgs(title)
     plt.show()
+
+
+
+def save_plots_to_imgs(title):
+    # Ensure the subfolder exists
+    subfolder = 'plots'
+    os.makedirs(subfolder, exist_ok=True)
+    formatted_title = title.lower().replace(' ', '_')
+    # Save the plot as PNG and JPEG in the specified subfolder
+    plt.savefig(os.path.join(subfolder, f'{formatted_title}.png'))
+    plt.savefig(os.path.join(subfolder, f'{formatted_title}.jpeg'))
 
 
 def compute_correlation(data1, data2):
