@@ -27,23 +27,27 @@ def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_
         for stat_name in stats_column_names:
             # Create the plot for each stat_name
             plt.figure(figsize=(12, 8))
-            YLABEL_STATS = f'Statistical Distance Units for {stat_name}'
+            YLABEL_STATS = f'Augmentation parameters for {stat_name}'
 
             for i, (env, statvals) in enumerate(STATS_DATA.items()):
                 values = statvals[stat_name]
                 x_values = [i] * len(values)  # All values for this environment are plotted at the same x position
 
                 for j, val in enumerate(values):
-                    if j == MAX_INDICES[env][stat_name]:
+                    # print(j, MAX_INDICES[env][stat_name])
+                    if values[j] == MAX_INDICES[env][stat_name]:
+                        # print('equals_max', values[j], MAX_INDICES[env][stat_name])
                         plt.scatter(x_values[j], val, color='red', s=300, zorder=2)  # Highlight max entry
                     else:
+                        # print('not_equal_max', j, MAX_INDICES[env][stat_name])
                         plt.scatter(x_values[j], val, color='blue', s=30, zorder=1)
 
                 plt.plot([i] * len(values), values, linestyle=':', color='black')
 
             # Set x-ticks to environment names
             plt.xticks(range(len(STATS_DATA)), STATS_DATA.keys(), rotation=45, ha='right')
-            TITLE_STATS = f'{stat_name} Distance Values over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Distance Data Point Corresponding to Max Environment Performance'
+            TITLE_STATS = (f'{stat_name} Augment Params over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Augment '
+                           f'Parameter Corresponding to Max Environment Performance')
             plt.title(TITLE_STATS)
             plt.xlabel(XLABEL_STATS)
             plt.ylabel(YLABEL_STATS)
