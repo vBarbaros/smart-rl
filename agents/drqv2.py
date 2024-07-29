@@ -89,6 +89,7 @@ class DrQV2Agent:
         if save_image:
             for idx, img in enumerate(original_images):
                 img.save(f'image_{idx}.png')
+                # img.save(f'image_{idx}_{step}.png')
 
         # encode
         obs = torch.as_tensor(obs, device=self.device)
@@ -102,6 +103,7 @@ class DrQV2Agent:
         if save_image:
             for idx, img in enumerate(augmented_images):
                 img.save(f'aug_image_{idx}.png')
+                # img.save(f'aug_image_{idx}_{step}.png')
 
         obs = self.pixel_encoder(obs.unsqueeze(0))
         stddev = utils.schedule(self.stddev_schedule, step)

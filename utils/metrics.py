@@ -69,10 +69,16 @@ class StatsMetrics:
         self.metrics['hamming'] = torch.sum(different_elements).item()
 
     def bhattacharyya(self, img_tensor_original, img_tensor_augmented):
-        self.metrics['bhattacharyya'] = -torch.log(torch.sum(torch.sqrt(img_tensor_original * img_tensor_augmented))).item()
+        epsilon = 1e-10
+        self.metrics['bhattacharyya'] = -torch.log(torch.sum(torch.sqrt((img_tensor_original + epsilon) * (img_tensor_augmented + epsilon)))).item()
+        # self.metrics['bhattacharyya'] = -torch.log(torch.sum(torch.sqrt(img_tensor_original * img_tensor_augmented))).item()
 
     def kl_div(self, img_tensor_original, img_tensor_augmented):
-        self.metrics['kl_div'] = torch.sum(img_tensor_original * torch.log(img_tensor_original / img_tensor_augmented)).item()
+        epsilon = 1e-10
+        self.metrics['kl_div'] = torch.sum(
+            (img_tensor_original + epsilon) * torch.log((img_tensor_original + epsilon) / (img_tensor_augmented + epsilon))).item()
+
+        # self.metrics['kl_div'] = torch.sum(img_tensor_original * torch.log(img_tensor_original / img_tensor_augmented)).item()
 
     def chebyshev(self, img_tensor_original, img_tensor_augmented):
         self.metrics['chebyshev'] = torch.max(torch.abs(img_tensor_original - img_tensor_augmented)).item()

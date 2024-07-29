@@ -18,7 +18,7 @@ def replace_underscores_with_newlines(s, positions):
     return ' '.join(parts)
 
 
-def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
+def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True, augment_type=''):
     """
     Plots statistical distance metrics for multiple environments.
     Highlights the max value entry for each environment with a larger red dot.
@@ -69,11 +69,11 @@ def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_
             plt.ylabel(YLABEL_STATS)
             plt.grid(True)
             plt.tight_layout()
-            save_plots_to_imgs(TITLE_STATS)
+            save_plots_to_imgs('all_envs_stats_dist_style_' + augment_type)
             plt.show()
 
 
-def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True):
+def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_names, XLABEL_STATS, show=True, augment_type=''):
     """
     Plots statistical distance metrics for multiple environments.
     Highlights the max value entry for each environment with a larger red dot.
@@ -116,7 +116,7 @@ def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_name
             plt.ylabel(YLABEL_STATS)
             plt.grid(True)
             plt.tight_layout()
-            save_plots_to_imgs(TITLE_STATS)
+            save_plots_to_imgs(stat_name + '_' + augment_type)
             plt.show()
 
 
@@ -537,7 +537,7 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.legend()
-    save_plots_to_imgs(title)
+    save_plots_to_imgs(env_name + '_' + x_label)
     plt.show()
 
 
