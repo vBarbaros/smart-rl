@@ -53,3 +53,6 @@ for i in 1.1; do
     # Capture the PID of the last background process and store it
 #    echo $! >> "$pid_file"
 done
+
+
+# find . -type d -name "eval_video" -exec rm -r {} +
