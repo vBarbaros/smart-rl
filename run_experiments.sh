@@ -22,7 +22,7 @@
 
 # for shift
 #for i in 0 1 2 3 4 5 6 7 8 9 10; do
-for i in 1.1; do
+for i in 0; do
 
 # for rotate
 #for i in 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3 4 5 7 9 11 13 15; do
@@ -36,13 +36,13 @@ for i in 1.1; do
 #    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=shift augment_param=$i
 #    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=shift augment_param=$i
 
-#    python get_augment_stats.py task=cartpole_balance_sparse agent=drqv2_aug augment_type=rotate augment_param=$i
-#    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=rotate augment_param=$i
-#    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=rotate augment_param=$i
+    python get_augment_stats.py task=cartpole_balance_sparse agent=drqv2_aug augment_type=rotate augment_param=$i
+    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=rotate augment_param=$i
+    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=rotate augment_param=$i
 
 
 #    python get_augment_stats.py task=cartpole_balance_sparse agent=drqv2_aug augment_type=contrast augment_param=$i
-    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=contrast augment_param=$i
+#    python get_augment_stats.py task=pendulum_swingup agent=drqv2_aug augment_type=contrast augment_param=$i
 #    python get_augment_stats.py task=walker_run agent=drqv2_aug augment_type=contrast augment_param=$i
 
 
