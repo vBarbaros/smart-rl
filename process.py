@@ -43,15 +43,17 @@ def find_files_and_check_lines(root_dir, subdir_pattern, seed_list, expected_lin
     for experiment_param, paths in sorted_experiment_files.items():
         output_line = '| | ' + experiment_param + '|'
         seed_ctr = 0
+        paths_str = "".join(paths)
         for seed in seed_list:
-            seed_pattern = f"seed_{seed}"
-            found = any(seed_pattern in path for path in paths)
+            seed_pattern = f"/seed_{seed}/"
+            # found = bool(seed_pattern in path for path in paths)
+            found = bool(seed_pattern in paths_str)
             if found:
                 output_line += str(seed) + '(+) |'
                 seed_ctr += 1
             else:
                 output_line += str(seed) + '(-) |'
-        print(output_line + str(seed_ctr) + '|')
+        print(output_line + str(len(paths)) + '|')
 
     # for file_path in files_found:
     #     experiment_param = file_path.split('/')[3]
@@ -161,12 +163,12 @@ def main():
 
     # root_directory = 'exp-rot/exp/cartpole_balance_sparse'
     # root_directory = 'exp-rot/exp/pendulum_swingup'
-    root_directory = 'exp-rot/exp/walker_run'
+    # root_directory = 'exp-rot/exp/walker_run'
 
 
     # root_directory = 'exp-contrast/exp/cartpole_balance_sparse'
     # root_directory = 'exp-contrast/exp/pendulum_swingup'
-    # root_directory = 'exp-contrast/exp/walker_run'
+    root_directory = 'exp-contrast/exp/walker_run'
     subdir_pattern = '*/*/*/eval.csv'
     files_found = find_files_and_check_lines(root_directory, subdir_pattern, seed_list=seed_list)
 
