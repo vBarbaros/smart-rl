@@ -158,7 +158,10 @@ def main():
     seed_list = [2, 3, 4, 7, 10, 13, 23, 123, 1234, 1313]
 
     # root_directory = 'exp-pad/exp/cartpole_balance_sparse'
+    root_directory = 'exp-pad/exp/finger_turn_hard' #!!!
     # root_directory = 'exp-pad/exp/pendulum_swingup'
+    # root_directory = 'exp-pad/exp/quadruped_run'
+    # root_directory = 'exp-pad/exp/reacher_hard'
     # root_directory = 'exp-pad/exp/walker_run'
 
     # root_directory = 'exp-rot/exp/cartpole_balance_sparse'
@@ -168,7 +171,7 @@ def main():
 
     # root_directory = 'exp-contrast/exp/cartpole_balance_sparse'
     # root_directory = 'exp-contrast/exp/pendulum_swingup'
-    root_directory = 'exp-contrast/exp/walker_run'
+    # root_directory = 'exp-contrast/exp/walker_run'
     subdir_pattern = '*/*/*/eval.csv'
     files_found = find_files_and_check_lines(root_directory, subdir_pattern, seed_list=seed_list)
 
