@@ -508,8 +508,12 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
     y_label = 'Total Sum of Episodic Rewards'
 
     # print("\n", env_name, "...Plotting Sum Stats for", performance_param)
+    # mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Max Mean', stat_type='Max Statistics')
+    # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Max Var', stat_type='Max Statistics')
+
     mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
     var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Var', stat_type='Sum Statistics')
+
     # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Var Mean', stat_type='Var Statistics')
     # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean Variance', stat_type='Sum Mean Var Statistics')
     # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='StdDev Mean', stat_type='StdDev Statistics')
