@@ -173,6 +173,8 @@ def process_and_analyze_data(
     MIN_TOP_FIVE, MAX_TOP_FIVE, summary_statistics, sorted_items = display_analysis(
         datasets_dict, list_of_root_dirs_by_augment_degree, ENV_NAME, column_name, show=False)
 
+    # print(datasets_dict)
+
     MAX_TOP_FIVE = sorted_items[0][0]
     DICTS_ALL_STATS[ENV_NAME][column_name + '_sorted'] = sorted_items
     DICTS_ALL_STATS[ENV_NAME]['range_top_five'] = (MIN_TOP_FIVE, MAX_TOP_FIVE)
@@ -507,13 +509,23 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
 
     # print("\n", env_name, "...Plotting Sum Stats for", performance_param)
     mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
-    var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Var Mean', stat_type='Var Statistics')
-    # print(mean_vals_over_sum_performance)
-    # print(var_vals_over_sum_performance)
+    # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Var Mean', stat_type='Var Statistics')
+    # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean Variance', stat_type='Sum Mean Var Statistics')
+    var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='StdDev Mean', stat_type='StdDev Statistics')
+
+    # 'Sum Statistics': {'Sum Min': None, 'Sum Max': None, 'Sum Mean': None},
+    # 'Max Statistics': {'Max Min': None, 'Max Max': None, 'Max Mean': None},
+    # 'Var Statistics': {'Var Min': None, 'Var Max': None, 'Var Mean': None},
+    # 'StdDev Statistics': {'StdDev Min': None, 'StdDev Max': None, 'StdDev Mean': None},
+    # 'Sum Mean Var Statistics': {'Sum Mean Variance': None},
+    # 'Sum Mean StdDev Statistics': {'Sum Mean StdDev': None}
+    print(mean_vals_over_sum_performance)
+    print(var_vals_over_sum_performance)
     categories = list(mean_vals_over_sum_performance.keys())
     mean_sum_vals = list(mean_vals_over_sum_performance.values())
 
-    std_sum_vals = [np.sqrt(var) for var in var_vals_over_sum_performance.values()]
+    # std_sum_vals = [np.sqrt(var) for var in var_vals_over_sum_performance.values()]
+    std_sum_vals = [var for var in var_vals_over_sum_performance.values()]
     if use_var:
         var_sum_vals = list(var_vals_over_sum_performance.values())
 
@@ -685,6 +697,7 @@ def compute_summary_stats(stats_dict):
     for key, df in stats_dict.items():
         if df is not None and not df.empty:
             # Compute sum of 'Min', 'Max', and 'Mean' columns
+
             sum_stats = {
                 'Sum Min': df['Min'].sum(),
                 'Sum Max': df['Max'].sum(),
@@ -717,19 +730,28 @@ def compute_summary_stats(stats_dict):
                 'StdDev Mean': np.sqrt(var_stats['Var Mean'])
             }
 
+            # Compute variance and standard deviation of the sum of 'Mean' values
+            sum_mean_var = var_stats['Var Mean'] * len(df)
+            sum_mean_stddev = np.sqrt(sum_mean_var)
+
             # Store results in a structured dictionary
             summary_stats[key] = {
                 'Sum Statistics': sum_stats,
                 'Max Statistics': max_stats,
                 'Var Statistics': var_stats,
-                'StdDev Statistics': stddev_stats
+                'StdDev Statistics': stddev_stats,
+                'Sum Mean Var Statistics': {'Sum Mean Variance': sum_mean_var},
+                'Sum Mean StdDev Statistics': {'Sum Mean StdDev': sum_mean_stddev}
             }
+            print(df, 'df.sum(): ', df['Mean'].sum(), 'df.var(): ',df['Mean'].var(), 'df.stddev(): ',np.sqrt(var_stats['Var Mean']))
         else:
             summary_stats[key] = {
                 'Sum Statistics': {'Sum Min': None, 'Sum Max': None, 'Sum Mean': None},
                 'Max Statistics': {'Max Min': None, 'Max Max': None, 'Max Mean': None},
                 'Var Statistics': {'Var Min': None, 'Var Max': None, 'Var Mean': None},
-                'StdDev Statistics': {'StdDev Min': None, 'StdDev Max': None, 'StdDev Mean': None}
+                'StdDev Statistics': {'StdDev Min': None, 'StdDev Max': None, 'StdDev Mean': None},
+                'Sum Mean Var Statistics': {'Sum Mean Variance': None},
+                'Sum Mean StdDev Statistics': {'Sum Mean StdDev': None}
             }
             print(f"No data or empty DataFrame for key: {key}")
 
