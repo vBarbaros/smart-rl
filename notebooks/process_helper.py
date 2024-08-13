@@ -509,9 +509,10 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
 
     # print("\n", env_name, "...Plotting Sum Stats for", performance_param)
     mean_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean', stat_type='Sum Statistics')
+    var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Var', stat_type='Sum Statistics')
     # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Var Mean', stat_type='Var Statistics')
     # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='Sum Mean Variance', stat_type='Sum Mean Var Statistics')
-    var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='StdDev Mean', stat_type='StdDev Statistics')
+    # var_vals_over_sum_performance = extract_stat(summary_statistics, stat_name='StdDev Mean', stat_type='StdDev Statistics')
 
     # 'Sum Statistics': {'Sum Min': None, 'Sum Max': None, 'Sum Mean': None},
     # 'Max Statistics': {'Max Min': None, 'Max Max': None, 'Max Mean': None},
@@ -524,8 +525,8 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
     categories = list(mean_vals_over_sum_performance.keys())
     mean_sum_vals = list(mean_vals_over_sum_performance.values())
 
-    # std_sum_vals = [np.sqrt(var) for var in var_vals_over_sum_performance.values()]
-    std_sum_vals = [var for var in var_vals_over_sum_performance.values()]
+    std_sum_vals = [np.sqrt(var) for var in var_vals_over_sum_performance.values()]
+    # std_sum_vals = [var for var in var_vals_over_sum_performance.values()]
     if use_var:
         var_sum_vals = list(var_vals_over_sum_performance.values())
 
@@ -701,14 +702,17 @@ def compute_summary_stats(stats_dict):
             sum_stats = {
                 'Sum Min': df['Min'].sum(),
                 'Sum Max': df['Max'].sum(),
-                'Sum Mean': df['Mean'].sum()
+                'Sum Mean': df['Mean'].sum(),
+                'Sum Var': df['Var'].sum()
+
             }
 
             # Compute max of 'Min', 'Max', and 'Mean' columns
             max_stats = {
                 'Max Min': df['Min'].max(),
                 'Max Max': df['Max'].max(),
-                'Max Mean': df['Mean'].max()
+                'Max Mean': df['Mean'].max(),
+                'Max Var': df['Var'].max()
             }
 
             # Store results in a structured dictionary
@@ -743,7 +747,8 @@ def compute_summary_stats(stats_dict):
                 'Sum Mean Var Statistics': {'Sum Mean Variance': sum_mean_var},
                 'Sum Mean StdDev Statistics': {'Sum Mean StdDev': sum_mean_stddev}
             }
-            print(df, 'df.sum(): ', df['Mean'].sum(), 'df.var(): ',df['Mean'].var(), 'df.stddev(): ',np.sqrt(var_stats['Var Mean']))
+            # print(df, 'df.sum(): ', df['Mean'].sum(), 'df.var(): ',df['Mean'].var(), 'df.stddev(): ',np.sqrt(var_stats['Var Mean']))
+            print('df.sum(): ', df['Mean'].sum(), 'df.var(): ',df['Mean'].var(), 'df.stddev(): ',np.sqrt(var_stats['Var Mean']))
         else:
             summary_stats[key] = {
                 'Sum Statistics': {'Sum Min': None, 'Sum Max': None, 'Sum Mean': None},
@@ -815,12 +820,14 @@ def row_wise_stats(dataframes, column_name):
     max_values = concatenated.max(axis=1)
     min_values = concatenated.min(axis=1)
     mean_values = concatenated.mean(axis=1)
+    var_values = concatenated.var(axis=1)
 
     # Combine into a single DataFrame
     stats_df = pd.DataFrame({
         'Max': max_values,
         'Min': min_values,
-        'Mean': mean_values
+        'Mean': mean_values,
+        'Var': var_values
     })
 
     return stats_df
