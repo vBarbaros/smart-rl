@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 import numpy as np
 
+FONT_SIZE_TITLE = 18
+FONT_SIZE_TEXT = 16
+FONT_SIZE_LABELS = 14
+FONT_SIZE_TICKS = 12
 
 def replace_underscores_with_newlines(s, positions):
     parts = s.split('_')
@@ -61,12 +65,13 @@ def plot_rewards_similar_to_stats_metrics(STATS_DATA, MAX_INDICES, stats_column_
                 else:
                     modified_strings.append(replace_underscores_with_newlines(s, [2, 3]))
 
-            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center')
+            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center', fontsize=FONT_SIZE_TICKS)
+            plt.yticks(fontsize=FONT_SIZE_TICKS)
             TITLE_STATS = (f'{stat_name} Augment Params over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Augment '
                            f'Parameter Corresponding to Max Environment Performance')
-            plt.title(TITLE_STATS)
-            plt.xlabel(XLABEL_STATS)
-            plt.ylabel(YLABEL_STATS)
+            plt.title(TITLE_STATS, fontsize=FONT_SIZE_TITLE)
+            plt.xlabel(XLABEL_STATS, fontsize=FONT_SIZE_LABELS)
+            plt.ylabel(YLABEL_STATS, fontsize=FONT_SIZE_LABELS)
             plt.grid(True)
             plt.tight_layout()
             save_plots_to_imgs('all_envs_stats_dist_style_' + augment_type)
@@ -109,11 +114,12 @@ def plot_statistical_distance_metrics(STATS_DATA, MAX_INDICES, stats_column_name
                 else:
                     modified_strings.append(replace_underscores_with_newlines(s, [2, 3]))
 
-            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center')
+            plt.xticks(range(len(STATS_DATA)), modified_strings, rotation=0, ha='center', fontsize=FONT_SIZE_TICKS)
+            plt.yticks(fontsize=FONT_SIZE_TICKS)
             TITLE_STATS = f'{stat_name} Distance Values over Full Augmentation Range \n({XLABEL_STATS}) per Environment \nwith Highlighted Distance Data Point Corresponding to Max Environment Performance'
-            plt.title(TITLE_STATS)
-            plt.xlabel(XLABEL_STATS)
-            plt.ylabel(YLABEL_STATS)
+            plt.title(TITLE_STATS, fontsize=FONT_SIZE_TITLE)
+            plt.xlabel(XLABEL_STATS, fontsize=FONT_SIZE_LABELS)
+            plt.ylabel(YLABEL_STATS, fontsize=FONT_SIZE_LABELS)
             plt.grid(True)
             plt.tight_layout()
             save_plots_to_imgs(stat_name + '_' + augment_type)
@@ -338,7 +344,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     # Plotting the bar plot with error bars
     plt.figure(figsize=(10, 6))
     plt.bar(categories, mean_sum_stats_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
-    plt.title(stat_name + ' - Metrics Units with Error Bars vs ' + xlabels)
+    plt.title(stat_name + ' - Metrics Units with Error Bars vs ' + xlabels, fontsize=FONT_SIZE_TITLE)
     plt.xlabel(xlabels)
     plt.ylabel(ylabels)
     plt.show()
@@ -346,7 +352,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     # Scatter Plot with Error Bars
     plt.figure(figsize=(10, 6))
     plt.errorbar(categories, mean_sum_stats_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean with Min-Max Range')
-    plt.title(stat_name + ' - Scatter Plot of Metrics Units with Error Bars vs ' + xlabels)
+    plt.title(stat_name + ' - Scatter Plot of Metrics Units with Error Bars vs ' + xlabels, fontsize=FONT_SIZE_TITLE)
     plt.xlabel(xlabels)
     plt.ylabel(ylabels)
     plt.legend()
@@ -356,7 +362,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     plt.figure(figsize=(10, 6))
     plt.plot(categories, mean_sum_stats_vals, marker='o', color='b', label='Mean')
     plt.fill_between(categories, min_sum_vals, max_sum_vals, color='b', alpha=0.2, label='Min-Max Range')
-    plt.title(stat_name + ' - Line Plot of Metrics Units with Shaded Error Region vs ' + xlabels)
+    plt.title(stat_name + ' - Line Plot of Metrics Units with Shaded Error Region vs ' + xlabels, fontsize=FONT_SIZE_TITLE)
     plt.xlabel(xlabels)
     plt.ylabel(ylabels)
     plt.legend()
@@ -375,7 +381,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     plt.figure(figsize=(10, 6))
     plt.bar(categories, mean_sum_stats_vals, yerr=errors, capsize=5, color='skyblue', alpha=0.7, ecolor='black')
     plt.axvspan(highlight_xmin - 0.5, highlight_xmax + 0.5, color='yellow', alpha=0.3)
-    plt.title(stat_name + ' - Performance Metrics of Metrics Units with Error Bars vs ' + xlabels)
+    plt.title(stat_name + ' - Performance Metrics of Metrics Units with Error Bars vs ' + xlabels, fontsize=FONT_SIZE_TITLE)
     plt.xlabel(xlabels)
     plt.ylabel(ylabels)
     plt.show()
@@ -385,7 +391,7 @@ def plot_aug_stats(datasets_augstats_dict, list_of_root_dirs_by_augment_stats, s
     plt.errorbar(
         categories, mean_sum_stats_vals, yerr=errors, fmt='o', ecolor='black', capsize=5, label='Mean Stat Distance Values with Min-Max Range')
     plt.axvspan(highlight_xmin - 0.5, highlight_xmax + 0.5, color='yellow', alpha=0.3)
-    plt.title(stat_name + ' - Scatter Plot of Metrics Units with Error Bars vs ' + xlabels)
+    plt.title(stat_name + ' - Scatter Plot of Metrics Units with Error Bars vs ' + xlabels, fontsize=FONT_SIZE_TITLE)
     plt.xlabel(xlabels)
     plt.ylabel(ylabels)
     plt.legend()
@@ -446,7 +452,7 @@ def plot_performance_all(summary_statistics, env_name, performance_param, x_labe
     plt.figure(figsize=(10, 6))
     plt.plot(categories, mean_sum_vals, marker='o', color='b', label='Mean')
     plt.fill_between(categories, min_sum_vals, max_sum_vals, color='b', alpha=0.3, label='Min-Max Range')
-    plt.title(env_name + ' - Line Plot with Shaded Error Region')
+    plt.title(env_name + ' - Line Plot with Shaded Error Region', fontsize=FONT_SIZE_TITLE)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     # plt.ylim(0, max(max_sum_vals) + (0.05 * max(max_sum_vals)))
@@ -491,7 +497,7 @@ def plot_performance_all(summary_statistics, env_name, performance_param, x_labe
     plt.figure(figsize=(10, 6))
     plt.plot(categories, mean_vals, marker='o', color='b', label='Mean')
     plt.fill_between(categories, min_vals, max_vals, color='b', alpha=0.2, label='Min-Max Range')
-    plt.title(env_name + ' - Line Plot with Shaded Error Region')
+    plt.title(env_name + ' - Line Plot with Shaded Error Region',fontsize=FONT_SIZE_TITLE)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.legend()
@@ -550,9 +556,11 @@ def plot_performance_shaded_area(summary_statistics, env_name, performance_param
     plt.plot(categories, mean_sum_vals, marker='o', color='b', label='Mean')
     plt.fill_between(categories, lower_bound, upper_bound, color='b', alpha=0.3, label=plot_label)
     title = env_name + ' - Line Plot with Shaded Error Region'
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+    plt.title(title, fontsize=FONT_SIZE_TITLE)
+    plt.xlabel(x_label, fontsize=FONT_SIZE_LABELS)
+    plt.ylabel(y_label, fontsize=FONT_SIZE_LABELS)
+    plt.xticks(fontsize=FONT_SIZE_TICKS)
+    plt.yticks(fontsize=FONT_SIZE_TICKS)
     plt.legend()
     save_plots_to_imgs(env_name + '_' + x_label)
     plt.show()
